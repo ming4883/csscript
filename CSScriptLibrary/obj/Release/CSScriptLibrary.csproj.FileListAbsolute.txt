@@ -1,0 +1,5 @@
+E:\cs-script\src\CSScriptLibrary\bin\Release\CSScriptLibrary.dll
+E:\cs-script\src\CSScriptLibrary\bin\Release\CSScriptLibrary.xml
+E:\cs-script\src\CSScriptLibrary\bin\Release\Mono.CSharp.dll
+E:\cs-script\src\CSScriptLibrary\obj\Release\CSScriptLibrary.csprojResolveAssemblyReference.cache
+E:\cs-script\src\CSScriptLibrary\obj\Release\CSScriptLibrary.dll
