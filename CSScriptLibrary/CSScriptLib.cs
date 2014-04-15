@@ -781,7 +781,7 @@ namespace CSScriptLibrary
             }
             else
             {
-                return string.Format("{0}.{1}", Process.GetCurrentProcess().Id, script.GetHashCode());
+                return string.Format("{0}.{1}", Process.GetCurrentProcess().Id, CSSUtils.GetHashCodeEx(script));
             }
         }
 

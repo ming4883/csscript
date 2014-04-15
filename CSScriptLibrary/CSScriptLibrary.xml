@@ -1636,13 +1636,6 @@
             <param name="domain">The <see cref="T:System.AppDomain"/> to be cloned.</param>
             <returns>The newly created <see cref="T:System.AppDomain"/>.</returns>
         </member>
-        <member name="M:CSScriptLibrary.AppDomainHelper.GetStrongName(System.Reflection.Assembly)">
-            <summary>
-            Gets the strong name of the assembly.
-            </summary>
-            <param name="assembly">The assembly.</param>
-            <returns>Assembly strong name.</returns>
-        </member>
         <member name="M:CSScriptLibrary.AppDomainHelper.Clone(System.AppDomain,System.String,System.Security.PermissionSet,System.Security.Policy.StrongName[])">
             <summary>
             Clones the specified <see cref="T:System.AppDomain"/>. The mandatory "creation" properties of the <paramref name="domain"/> are used to create the new instance of <see cref="T:System.AppDomain"/>.
@@ -2406,6 +2399,16 @@
             Initializes a new instance of the <see cref="T:CSScriptLibrary.Evaluator"/> class.
             </summary>
         </member>
+        <member name="M:CSScriptLibrary.Evaluator.Reset">
+            <summary>
+            Resets Evaluator.
+            <para>
+            The <see cref="T:Mono.CSharp.CompilerSettings"/> and <see cref="P:CSScriptLibrary.Evaluator.CompilingResult"/> are reinitialized.
+            All reference assemblies are also cleared.
+            </para>
+            <para>The all current AppDomain assemblies will be referenced automatically.</para>
+            </summary>
+        </member>
         <member name="M:CSScriptLibrary.Evaluator.Reset(System.Boolean)">
             <summary>
             Resets Evaluator.
@@ -2418,6 +2421,11 @@
             <param name="referenceDomainAssemblies">if set to <c>true</c> the default assemblies of the current AppDomain
             will be referenced (see <see cref="M:CSScriptLibrary.Evaluator.ReferenceDomainAssemblies(CSScriptLibrary.DomainAssemblies)"/> method).
             </param>
+        </member>
+        <member name="M:CSScriptLibrary.Evaluator.ReferenceDomainAssemblies">
+            <summary>
+            References the all non-GAC domain assemblies.
+            </summary>
         </member>
         <member name="M:CSScriptLibrary.Evaluator.ReferenceDomainAssemblies(CSScriptLibrary.DomainAssemblies)">
             <summary>
@@ -2797,6 +2805,12 @@
             <summary>
             The collection of compiling warnings.
             </summary>
+        </member>
+        <member name="M:CSScriptLibrary.CompilingResult.CreateException">
+            <summary>
+            Creates the <see cref="T:System.Exception"/> containing combined error information.
+            </summary>
+            <returns>Instance of the <see cref="T:csscript.CompilerException"/>.</returns>
         </member>
         <member name="M:CSScriptLibrary.CompilingResult.CreateException(System.Boolean)">
             <summary>

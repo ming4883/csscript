@@ -1056,7 +1056,7 @@ namespace CSScriptLibrary
                 foreach (Type param in parameters)
                     sb.Append(param.ToString());
 
-                return sb.ToString().GetHashCode();
+                return CSSUtils.GetHashCodeEx(sb.ToString());
             }
         }
 

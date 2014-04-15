@@ -270,7 +270,7 @@ namespace CSScriptLibrary
                 }
                 else
                 {
-                    fileNameImported = Path.Combine(CSExecutor.ScriptCacheDir, string.Format("i_{0}_{1}{2}", Path.GetFileNameWithoutExtension(fileName), Path.GetDirectoryName(fileName).GetHashCode(), Path.GetExtension(fileName)));
+                    fileNameImported = Path.Combine(CSExecutor.ScriptCacheDir, string.Format("i_{0}_{1}{2}", Path.GetFileNameWithoutExtension(fileName), CSSUtils.GetHashCodeEx(Path.GetDirectoryName(fileName)), Path.GetExtension(fileName)));
                     if (!Directory.Exists(Path.GetDirectoryName(fileNameImported)))
                         Directory.CreateDirectory(Path.GetDirectoryName(fileNameImported));
                     if (File.Exists(fileNameImported))

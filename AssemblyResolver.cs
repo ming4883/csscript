@@ -116,7 +116,7 @@ namespace CSScriptLibrary
 
         private static int BuildHashSetValue(string assemblyName, string directory)
         {
-            return ((assemblyName ?? "") + (directory ?? "")).GetHashCode();
+            return CSSUtils.GetHashCodeEx((assemblyName ?? "") + (directory ?? ""));
         }
 
         //private static Assembly TryLoadAssemblyFrom(string assemblyName, string asmFile)

@@ -669,7 +669,7 @@ namespace csscript
                     bool fileUnlocked = false;
                     //Infinite timeout is not good choice here as it may block forever but continuing while the file is still locked will 
                     //throw a nice informative exception.
-                    using (Mutex fileLock = new Mutex(false, "Process." + options.scriptFileName.GetHashCode().ToString()))
+                    using (Mutex fileLock = new Mutex(false, "Process." + CSSUtils.GetHashCodeEx(options.scriptFileName).ToString()))
                         try
                         {
                             int start = Environment.TickCount;
@@ -1614,13 +1614,12 @@ namespace csscript
 
             if (Utils.IsLinux())
                 cacheDir = Path.Combine(commonCacheDir, Path.GetDirectoryName(Path.GetFullPath(file))
-                                                                                .GetHashCode()
+                                                                                .GetHashCode() //do not temper with LINUX!!!
                                                                                 .ToString());
             else
-                cacheDir = Path.Combine(commonCacheDir, Path.GetDirectoryName(Path.GetFullPath(file))
+                cacheDir = Path.Combine(commonCacheDir, CSSUtils.GetHashCodeEx(Path.GetDirectoryName(Path.GetFullPath(file))
                                                                                 .ToLower() //Win is not case-sensitive
-                                                                                .GetHashCode()
-                                                                                .ToString());
+                                                                                ).ToString());
             if (!Directory.Exists(cacheDir))
                 Directory.CreateDirectory(cacheDir);
 
