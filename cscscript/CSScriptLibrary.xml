@@ -192,7 +192,7 @@
         </member>
         <member name="P:csscript.Settings.DefaultRefAssemblies">
             <summary>
-            List of assembly names to be automatically referenced by the scripst. The items must be separated by coma or semicolon. Specifying .dll extension (e.g. System.Core.dll) is optional.
+            List of assembly names to be automatically referenced by the script. The items must be separated by coma or semicolon. Specifying .dll extension (e.g. System.Core.dll) is optional.
             Assembly can contain expandable environment variables.
             </summary>
         </member>

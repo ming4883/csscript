@@ -100,11 +100,6 @@ namespace csscript
                 args = tempArgs.ToArray();
             }
 
-            //Console.WriteLine("<--------------------------");
-            //foreach (var item in args)
-            //    Console.WriteLine(item);
-            //Console.WriteLine("<--------------------------");
-
             try
             {
                 SetEnvironmentVariable("CSScriptRuntime", System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString());

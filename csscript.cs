@@ -1611,15 +1611,13 @@ namespace csscript
             string commonCacheDir = Path.Combine(CSExecutor.GetScriptTempDir(), "Cache");
 
             string cacheDir;
+            string directoryPath = Path.GetDirectoryName(Path.GetFullPath(file));
 
-            if (Utils.IsLinux())
-                cacheDir = Path.Combine(commonCacheDir, Path.GetDirectoryName(Path.GetFullPath(file))
-                                                                                .GetHashCode() //do not temper with LINUX!!!
-                                                                                .ToString());
-            else
-                cacheDir = Path.Combine(commonCacheDir, CSSUtils.GetHashCodeEx(Path.GetDirectoryName(Path.GetFullPath(file))
-                                                                                .ToLower() //Win is not case-sensitive
-                                                                                ).ToString());
+            if (!Utils.IsLinux())
+                directoryPath = directoryPath.ToLower();//Win is not case-sensitive
+
+            cacheDir = Path.Combine(commonCacheDir, CSSUtils.GetHashCodeEx(directoryPath).ToString());
+
             if (!Directory.Exists(cacheDir))
                 Directory.CreateDirectory(cacheDir);
 

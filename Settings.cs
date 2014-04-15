@@ -226,7 +226,7 @@ namespace csscript
         }
 
         /// <summary>
-        /// List of assembly names to be automatically referenced by the scripst. The items must be separated by coma or semicolon. Specifying .dll extension (e.g. System.Core.dll) is optional.
+        /// List of assembly names to be automatically referenced by the script. The items must be separated by coma or semicolon. Specifying .dll extension (e.g. System.Core.dll) is optional.
         /// Assembly can contain expandable environment variables.
         /// </summary>
         [Category("Extensibility"), Description("List of assembly names to be automatically referenced by the scripts (e.g. System.dll, System.Core.dll). Assembly extension is optional.")]
@@ -294,6 +294,15 @@ namespace csscript
         {
             get { return precompiler; }
             set { precompiler = value; }
+        }
+
+        bool customHashing = true;
+
+        [Browsable(false)]
+        public bool CustomHashing
+        {
+            get { return customHashing; }
+            set { customHashing = value; }
         }
 
         private HideOptions hideOptions = HideOptions.HideMostFiles;
@@ -421,6 +430,7 @@ namespace csscript
                 doc.DocumentElement.AppendChild(doc.CreateElement("useSurrogatepHostingProcess")).AppendChild(doc.CreateTextNode(useSurrogatepHostingProcess.ToString()));
                 doc.DocumentElement.AppendChild(doc.CreateElement("openEndDirectiveSyntax")).AppendChild(doc.CreateTextNode(openEndDirectiveSyntax.ToString()));
                 doc.DocumentElement.AppendChild(doc.CreateElement("Precompiler")).AppendChild(doc.CreateTextNode(Precompiler));
+                doc.DocumentElement.AppendChild(doc.CreateElement("CustomHashing")).AppendChild(doc.CreateTextNode(CustomHashing.ToString()));
 
                 doc.Save(fileName);
             }
@@ -469,6 +479,7 @@ namespace csscript
                     settings.useSurrogatepHostingProcess = data.SelectSingleNode("useSurrogatepHostingProcess").InnerText.ToLower() == "true";
                     settings.OpenEndDirectiveSyntax = data.SelectSingleNode("openEndDirectiveSyntax").InnerText.ToLower() == "true";
                     settings.Precompiler = data.SelectSingleNode("Precompiler").InnerText;
+                    settings.CustomHashing = data.SelectSingleNode("CustomHashing").InnerText.ToLower() == "true";
                 }
                 catch
                 {

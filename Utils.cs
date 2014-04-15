@@ -413,6 +413,12 @@ namespace csscript
                     {
                         options.autoClass = true;
                     }
+                    else if (args[i] == cmdFlagPrefix + "nathash")
+                    {
+                        //-nathash //native hashing; by default it is deterministic but slower custom string hashing algorithm
+                        //it is a hidden option for the cases when faster hashing is desired
+                        options.customHashing = false;
+                    }
                     else if (args[i].StartsWith(cmdFlagPrefix + "ca")) // -ca
                     {
                         options.useCompiled = true;
@@ -822,13 +828,31 @@ namespace csscript
                 return Environment.GetEnvironmentVariable("CSS_IsRuntimeErrorReportingSupressed") != null;
             }
         }
-        //deterministic GetHashCode
+
         public static int GetHashCodeEx(string s)
         {
-            return s.GetHashCode();
+            //during the script first compilation GetHashCodeEx is called ~10 times
+            //during the cached execution ~5 times only
+            //and for hosted scenarios it is twice less
+
+            //The following profiling demonstrates that in the worst case scenario hashing would 
+            //only add ~2 microseconds to the execution time  
+
+            //Native executions cost (milliseconds)=> 100000: 7; 10 : 0.0007
+            //Custom Safe executions cost (milliseconds)=> 100000: 40; 10: 0.004
+            //Custom Unsafe executions cost (milliseconds)=> 100000: 13; 10: 0.0013
+
+            if (ExecuteOptions.options.customHashing)
+            {
+                //deterministic GetHashCode; useful for integration with thidr party products (e.g. CS-Script.Npp)
+                return GetHashCode32(s);
+            }
+            else
+            {
+                return s.GetHashCode();
+            }
         }
 
-#if !net1
         //needed to have reliable HASH as x64 and x32 have different algorithms; This leads to the inability of script clients calculate cache directory correctly  
         static int GetHashCode32(string s)
         {
@@ -849,7 +873,7 @@ namespace csscript
             }
             return num1 + num2 * 0x5d588b65;
         }
-#endif
+
         //public static unsafe int GetHashCode32Unsafe(string s)
         //{
         //    fixed (char* str = s.ToCharArray())

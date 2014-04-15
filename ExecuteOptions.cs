@@ -114,6 +114,7 @@ namespace csscript
             clone.defaultRefAssemblies = this.defaultRefAssemblies;
             clone.hideTemp = this.hideTemp;
             clone.autoClass = this.autoClass;
+            clone.customHashing = this.customHashing;
             clone.compilationContext = this.compilationContext;
             clone.useScriptConfig = this.useScriptConfig;
             clone.customConfigFileName = this.customConfigFileName;
@@ -165,6 +166,7 @@ namespace csscript
             //clone.suppressExternalHosting = this.suppressExternalHosting;
             clone.compilationContext = this.compilationContext;
             clone.autoClass = this.autoClass;
+            clone.customHashing = this.customHashing;
             clone.altConfig = this.altConfig;
             clone.hideTemp = this.hideTemp;
             clone.scriptFileNamePrimary = this.scriptFileNamePrimary;
@@ -216,6 +218,7 @@ namespace csscript
         public string cleanupShellCommand = "";
         public bool noConfig = false;
         //public bool suppressExternalHosting = true;
+        public bool customHashing = true;
         public bool autoClass = false;
         public bool versionOnly = false;
         public string compilerOptions = "";

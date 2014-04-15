@@ -188,7 +188,9 @@
   <PropertyGroup>
     <PreBuildEvent>
     </PreBuildEvent>
-    <PostBuildEvent>copy "$(TargetPath)" ..\..\..\..\Lib
-copy "$(TargetDir)$(TargetName).xml" ..\..\..\..\Lib</PostBuildEvent>
+    <PostBuildEvent>echo off
+REM you may need to comment the command below if your directory structure is incompatible
+copy "$(TargetPath)" ..\..\..\..\..\Lib
+copy "$(TargetDir)$(TargetName).xml" ..\..\..\..\..\Lib</PostBuildEvent>
   </PropertyGroup>
 </Project>

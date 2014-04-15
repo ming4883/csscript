@@ -188,7 +188,9 @@
   <PropertyGroup>
     <PreBuildEvent>
     </PreBuildEvent>
-    <PostBuildEvent>copy "$(TargetPath)" ..\..\..\..\csws.exe
+    <PostBuildEvent>echo off
+REM you may need to comment the command below if your directory structure is incompatible
+copy "$(TargetPath)" ..\..\..\..\..\csws.exe
 </PostBuildEvent>
   </PropertyGroup>
 </Project>

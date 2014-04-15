@@ -893,6 +893,7 @@ namespace CSScriptLibrary
             options.apartmentState = settings.DefaultApartmentState;
             options.reportDetailedErrorInfo = settings.ReportDetailedErrorInfo;
             options.cleanupShellCommand = settings.CleanupShellCommand;
+            options.customHashing = settings.CustomHashing;
             options.inMemoryAsm = settings.InMemoryAsssembly;
             options.TargetFramework = settings.TargetFramework;
             options.doCleanupAfterNumberOfRuns = settings.DoCleanupAfterNumberOfRuns;
