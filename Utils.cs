@@ -822,13 +822,13 @@ namespace csscript
                 return Environment.GetEnvironmentVariable("CSS_IsRuntimeErrorReportingSupressed") != null;
             }
         }
-#if !net1
         //deterministic GetHashCode
         public static int GetHashCodeEx(string s)
         {
             return s.GetHashCode();
         }
 
+#if !net1
         //needed to have reliable HASH as x64 and x32 have different algorithms; This leads to the inability of script clients calculate cache directory correctly  
         static int GetHashCode32(string s)
         {

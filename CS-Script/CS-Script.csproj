@@ -83,7 +83,8 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy "$(TargetPath)" "$(ProjectDir)..\..\Lib\ShellExtensions\$(TargetFileName)"</PostBuildEvent>
+    <PostBuildEvent>copy "$(TargetPath)" "$(ProjectDir)..\..\Lib\ShellExtensions\$(TargetFileName)"
+copy "$(ProjectDir)obj\$(ConfigurationName)\CSScript.Properties.Resources.resources" "$(ProjectDir)CSScript.Properties.Resources.resources"</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

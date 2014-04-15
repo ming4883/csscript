@@ -59,17 +59,17 @@ ECHO ------------ >> build.log
 
 ECHO Building css_config.exe: 
 ECHO Building css_config.exe: >> ..\Build\build.log
-"%net4_tools%\csc.exe" /nologo %common_4_params% /unsafe- /nowarn:1701,1702 /o /out:css_config.exe /win32manifest:..\ChooseDefaultProgram\app.manifest /win32icon:..\Logo\css_logo.ico /resource:..\css_config\obj\Release\SplashScreen.resources /target:winexe ..\css_config\AssemblyInfo.cs ..\css_config\css_config.cs ..\css_config\Program.cs ..\css_config\SplashForm.cs ..\css_config\VistaSecurity.cs /r:"%net4_asms%\System.dll" /r:"%net4_asms%\System.Drawing.dll" /r:"%net4_asms%\System.Core.dll" /r:"%net4_asms%\System.Data.dll" /r:"%net4_asms%\System.XML.dll" /r:"%net4_asms%\System.Windows.Forms.dll" >> build.log
+"%net4_tools%\csc.exe" /nologo %common_4_params% /unsafe- /nowarn:1701,1702 /o /out:css_config.exe /win32manifest:..\ChooseDefaultProgram\app.manifest /win32icon:..\Logo\css_logo.ico /resource:..\css_config\SplashScreen.resources /target:winexe ..\css_config\AssemblyInfo.cs ..\css_config\css_config.cs ..\css_config\Program.cs ..\css_config\SplashForm.cs ..\css_config\VistaSecurity.cs /r:"%net4_asms%\System.dll" /r:"%net4_asms%\System.Drawing.dll" /r:"%net4_asms%\System.Core.dll" /r:"%net4_asms%\System.Data.dll" /r:"%net4_asms%\System.XML.dll" /r:"%net4_asms%\System.Windows.Forms.dll" >> build.log
 ECHO ------------ >> build.log
 
 ECHO Building CS-Script.exe: 
 ECHO Building CS-Script.exe: >> ..\Build\build.log
-"%net4_tools%\csc.exe" /nologo %common_4_params%  /unsafe- /nowarn:1701,1702 /o /out:CS-Script.exe /resource:..\CS-Script\obj\Release\CSScript.Properties.Resources.resources /target:winexe /win32icon:..\Logo\css_logo.ico ..\CS-Script\Properties\AssemblyInfo.cs ..\CS-Script\Program.cs /r:"%net4_asms%\System.dll" /r:"%net4_asms%\System.Drawing.dll" /r:"%net4_asms%\System.Core.dll" /r:"%net4_asms%\System.Data.dll" /r:"%net4_asms%\System.XML.dll" /r:"%net4_asms%\System.Windows.Forms.dll" >> build.log
+"%net4_tools%\csc.exe" /nologo %common_4_params%  /unsafe- /nowarn:1701,1702 /o /out:CS-Script.exe /resource:..\CS-Script\CSScript.Properties.Resources.resources /target:winexe /win32icon:..\Logo\css_logo.ico ..\CS-Script\Properties\AssemblyInfo.cs ..\CS-Script\Program.cs /r:"%net4_asms%\System.dll" /r:"%net4_asms%\System.Drawing.dll" /r:"%net4_asms%\System.Core.dll" /r:"%net4_asms%\System.Data.dll" /r:"%net4_asms%\System.XML.dll" /r:"%net4_asms%\System.Windows.Forms.dll" >> build.log
 ECHO ------------ >> build.log
 
 ECHO Building ChooseDefaultProgram.exe: 
 ECHO Building ChooseDefaultProgram.exe: >> ..\Build\build.log
-"%net4_tools%\csc.exe" /nologo %common_4_params%  /unsafe- /nowarn:1701,1702 /o /out:ChooseDefaultProgram.exe /win32manifest:..\ChooseDefaultProgram\app.manifest /resource:..\ChooseDefaultProgram\obj\Release\CSScript.Resources.resources /target:winexe /win32icon:..\Logo\css_logo.ico  ..\ChooseDefaultProgram\Resources.Designer.cs ..\ChooseDefaultProgram\AssemblyInfo.cs ..\ChooseDefaultProgram\ChooseDefaultProgram.cs /r:"%net4_asms%\System.dll" /r:"%net4_asms%\System.Core.dll" /r:"%net4_asms%\System.Data.dll" /r:"%net4_asms%\System.XML.dll" /r:"%net4_asms%\System.Windows.Forms.dll" >> build.log
+"%net4_tools%\csc.exe" /nologo %common_4_params%  /unsafe- /nowarn:1701,1702 /o /out:ChooseDefaultProgram.exe /win32manifest:..\ChooseDefaultProgram\app.manifest /resource:..\ChooseDefaultProgram\CSScript.Resources.resources /target:winexe /win32icon:..\Logo\css_logo.ico  ..\ChooseDefaultProgram\Resources.Designer.cs ..\ChooseDefaultProgram\AssemblyInfo.cs ..\ChooseDefaultProgram\ChooseDefaultProgram.cs /r:"%net4_asms%\System.dll" /r:"%net4_asms%\System.Core.dll" /r:"%net4_asms%\System.Data.dll" /r:"%net4_asms%\System.XML.dll" /r:"%net4_asms%\System.Windows.Forms.dll" >> build.log
 ECHO ------------ >> build.log
 
 ECHO Building cscs.exe (v1.1):
