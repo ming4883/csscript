@@ -212,6 +212,11 @@
             Path to the precompiller script/assembly (see documentation for details). You can specify multiple recompiles separating them by semicolon.
             </summary>
         </member>
+        <member name="P:csscript.Settings.CustomHashing">
+            <summary>
+            
+            </summary>
+        </member>
         <member name="P:csscript.Settings.ReportDetailedErrorInfo">
             <summary>
             Boolean flag that indicates how much error details to be reported should error occur.

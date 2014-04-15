@@ -298,6 +298,9 @@ namespace csscript
 
         bool customHashing = true;
 
+        /// <summary>
+        /// 
+        /// </summary>
         [Browsable(false)]
         public bool CustomHashing
         {

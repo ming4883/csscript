@@ -107,10 +107,11 @@ namespace csscript
                 bool found = false;
                 foreach (string pathItem in retval)
                     if (Utils.IsSamePath(pathItem, path))
-                    {
-                        found = true;
-                        break;
-                    }
+                {
+                    found = true;
+                    break;
+                }
+
                 if (!found)
                     retval.Add(path);
             }
@@ -165,11 +166,11 @@ namespace csscript
 
         public static string RemoveAssemblyExtension(string asmName)
         {
-#if net1
+            #if net1
             if (asmName.ToLower().EndsWith(".dll") || asmName.ToLower().EndsWith(".exe"))
-#else
+                #else
             if (asmName.EndsWith(".dll", StringComparison.CurrentCultureIgnoreCase) || asmName.EndsWith(".exe", StringComparison.CurrentCultureIgnoreCase))
-#endif
+                #endif
                 return asmName.Substring(0, asmName.Length - 4);
             else
                 return asmName;
@@ -212,6 +213,7 @@ namespace csscript
                     if (rethrow && i == 2)
                         throw;
                 }
+
                 Thread.Sleep(200);
             }
         }
@@ -228,11 +230,11 @@ namespace csscript
 
         public static bool IsNullOrWhiteSpace(string text)
         {
-#if net4
+            #if net4
             return string.IsNullOrWhiteSpace(text);
-#else
+            #else
             return text == null || text.Trim() == "";
-#endif
+            #endif
         }
 
         /// <summary>
@@ -258,7 +260,6 @@ namespace csscript
 
     internal class CSSUtils
     {
-
         internal static void VerbosePrint(string message, ExecuteOptions options)
         {
             if (options.verbose)
@@ -279,7 +280,7 @@ namespace csscript
 
                 if (File.Exists(file))
                     using (StreamReader sr = new StreamReader(file))
-                        currentCode = sr.ReadToEnd();
+                currentCode = sr.ReadToEnd();
 
                 if (currentCode != code)
                 {
@@ -295,12 +296,14 @@ namespace csscript
                             {
                                 sw.Write(code);
                             }
+
                             break;
                         }
                         catch { }
                         Thread.Sleep(200);
                     }
                 }
+
                 return file;
             }
         }
@@ -495,11 +498,11 @@ namespace csscript
             contextData["NewIncludes"] = context.NewIncludes;
             contextData["SearchDirs"] = context.SearchDirs;
 
-#if net1
+            #if net1
             System.Collections.Hashtable precompilers = CSSUtils.LoadPrecompilers(options);
-#else
+            #else
             Dictionary<string, List<object>> precompilers = CSSUtils.LoadPrecompilers(options);
-#endif
+            #endif
             if (precompilers.Count != 0)
             {
                 for (int i = 0; i < filesToCompile.Length; i++)
@@ -509,11 +512,11 @@ namespace csscript
                     bool modified = false;
                     foreach (string precompilerFile in precompilers.Keys)
                     {
-#if net1
+                        #if net1
                         foreach (object precompiler in precompilers[precompilerFile] as ArrayList)
-#else
+                            #else
                         foreach (object precompiler in precompilers[precompilerFile])
-#endif
+                            #endif
                         {
                             if (options.verbose && i == 0)
                             {
@@ -556,7 +559,7 @@ namespace csscript
 
         internal const string noDefaultPrecompilerSwitch = "nodefault";
 
-#if net1
+        #if net1
         public static System.Collections.Hashtable LoadPrecompilers(ExecuteOptions options)
         {
             System.Collections.Hashtable retval = new System.Collections.Hashtable();
@@ -578,199 +581,206 @@ namespace csscript
                     retval.Add(Assembly.GetExecutingAssembly().Location, compilers);
                 }
             }
-#else
+
+            #else
 
         internal static Dictionary<string, List<object>> LoadPrecompilers(ExecuteOptions options)
-        {
-            Dictionary<string, List<object>> retval = new Dictionary<string, List<object>>();
+            {
+                Dictionary<string, List<object>> retval = new Dictionary<string, List<object>>();
 
-            if (!options.preCompilers.StartsWith(noDefaultPrecompilerSwitch)) //no defaults
+                if (!options.preCompilers.StartsWith(noDefaultPrecompilerSwitch)) //no defaults
                 retval.Add(Assembly.GetExecutingAssembly().Location, new List<object>() { new DefaultPrecompiler() });
 
-            if (options.autoClass)
-            {
-                if (retval.ContainsKey(Assembly.GetExecutingAssembly().Location))
-                    retval[Assembly.GetExecutingAssembly().Location].Add(new AutoclassPrecompiler());
-                else
-                    retval.Add(Assembly.GetExecutingAssembly().Location, new List<object>() { new AutoclassPrecompiler() });
-            }
-#endif
+                if (options.autoClass)
+                {
+                    if (retval.ContainsKey(Assembly.GetExecutingAssembly().Location))
+                        retval[Assembly.GetExecutingAssembly().Location].Add(new AutoclassPrecompiler());
+                    else
+                        retval.Add(Assembly.GetExecutingAssembly().Location, new List<object>() { new AutoclassPrecompiler() });
+                }
+
+                #endif
 
             foreach (string precompiler in Utils.RemoveDuplicates((options.preCompilers).Split(new char[] { ',' })))
-            {
-                string precompilerFile = precompiler.Trim();
-
-                if (precompilerFile != "" && precompilerFile != noDefaultPrecompilerSwitch)
                 {
-                    string sourceFile = FindImlementationFile(precompilerFile, options.searchDirs);
-                    if (sourceFile == null)
-                        throw new ApplicationException("Cannot find Precompiler file " + precompilerFile);
+                    string precompilerFile = precompiler.Trim();
 
-                    Assembly asm;
-                    if (sourceFile.EndsWith(".dll", true, CultureInfo.InvariantCulture))
-                        asm = Assembly.LoadFrom(sourceFile);
-                    else
-                        asm = CompilePrecompilerScript(sourceFile, options.searchDirs);
-
-                    //string typeName = typeof(IPrecompiler).Name;
-
-                    object precompilerObj = null;
-                    foreach (Module m in asm.GetModules())
+                    if (precompilerFile != "" && precompilerFile != noDefaultPrecompilerSwitch)
                     {
-                        if (precompilerObj != null)
-                            break;
+                        string sourceFile = FindImlementationFile(precompilerFile, options.searchDirs);
+                        if (sourceFile == null)
+                            throw new ApplicationException("Cannot find Precompiler file " + precompilerFile);
 
-                        foreach (Type t in m.GetTypes())
+                        Assembly asm;
+                        if (sourceFile.EndsWith(".dll", true, CultureInfo.InvariantCulture))
+                            asm = Assembly.LoadFrom(sourceFile);
+                        else
+                            asm = CompilePrecompilerScript(sourceFile, options.searchDirs);
+
+                        //string typeName = typeof(IPrecompiler).Name;
+
+                        object precompilerObj = null;
+                        foreach (Module m in asm.GetModules())
                         {
-                            if (t.Name.EndsWith("Precompiler"))
-                            {
-                                precompilerObj = asm.CreateInstance(t.Name);
-                                if (precompilerObj == null)
-                                    throw new Exception("Precompiler " + sourceFile + " cannot be loaded. CreateInstance returned null.");
+                            if (precompilerObj != null)
                                 break;
+
+                            foreach (Type t in m.GetTypes())
+                            {
+                                if (t.Name.EndsWith("Precompiler"))
+                                {
+                                    precompilerObj = asm.CreateInstance(t.Name);
+                                    if (precompilerObj == null)
+                                        throw new Exception("Precompiler " + sourceFile + " cannot be loaded. CreateInstance returned null.");
+                                    break;
+                                }
                             }
                         }
-                    }
 
-#if net1
+                        #if net1
                     if (precompilerObj != null)
-                    {
-                        ArrayList compilers = new ArrayList();
-                        compilers.Add(precompilerObj);
-                        retval.Add(sourceFile, compilers);
+                        {
+                            ArrayList compilers = new ArrayList();
+                            compilers.Add(precompilerObj);
+                            retval.Add(sourceFile, compilers);
+                        }
+
+                        #else
+                    if (precompilerObj != null)
+                            retval.Add(sourceFile, new List<object>() { precompilerObj });
+                        #endif
                     }
-#else
-                    if (precompilerObj != null)
-                        retval.Add(sourceFile, new List<object>() { precompilerObj });
-#endif
                 }
+
+                return retval;
             }
 
-            return retval;
-        }
-
-        public static string FindFile(string file, string[] searchDirs)
-        {
-            if (File.Exists(file))
+            public static string FindFile(string file, string[] searchDirs)
             {
-                return Path.GetFullPath(file);
+                if (File.Exists(file))
+                {
+                    return Path.GetFullPath(file);
+                }
+                else if (!Path.IsPathRooted(file))
+                {
+                    foreach (string dir in searchDirs)
+                        if (File.Exists(Path.Combine(dir, file)))
+                            return Path.Combine(dir, file);
+                }
+
+                return null;
             }
-            else if (!Path.IsPathRooted(file))
+
+            public static string FindImlementationFile(string file, string[] searchDirs)
             {
-                foreach (string dir in searchDirs)
-                    if (File.Exists(Path.Combine(dir, file)))
-                        return Path.Combine(dir, file);
+                string retval = FindFile(file, searchDirs);
+
+                if (retval == null && !Path.HasExtension(file))
+                {
+                    retval = FindFile(file + ".cs", searchDirs);
+                    if (retval == null)
+                        retval = FindFile(file + ".dll", searchDirs);
+                }
+
+                return retval;
             }
-            return null;
-        }
 
-        public static string FindImlementationFile(string file, string[] searchDirs)
-        {
-            string retval = FindFile(file, searchDirs);
-
-            if (retval == null && !Path.HasExtension(file))
+            internal static string[] CollectPrecompillers(CSharpParser parser, ExecuteOptions options)
             {
-                retval = FindFile(file + ".cs", searchDirs);
-                if (retval == null)
-                    retval = FindFile(file + ".dll", searchDirs);
-            }
-            return retval;
-        }
-
-        internal static string[] CollectPrecompillers(CSharpParser parser, ExecuteOptions options)
-        {
-#if net1
+                #if net1
             ArrayList allPrecompillers = new ArrayList();
-#else
+                #else
             List<string> allPrecompillers = new List<string>();
-#endif
+                #endif
             allPrecompillers.AddRange(options.preCompilers.Split(','));
 
-            foreach (string item in parser.Precompilers)
-                allPrecompillers.AddRange(item.Split(','));
+                foreach (string item in parser.Precompilers)
+                    allPrecompillers.AddRange(item.Split(','));
 
-#if net1
+                #if net1
             return Utils.RemoveDuplicates((string[])allPrecompillers.ToArray(typeof(string)));
-#else
+                #else
             return Utils.RemoveDuplicates(allPrecompillers.ToArray());
-#endif
-        }
-
-        internal static int GenerateCompilationContext(CSharpParser parser, ExecuteOptions options)
-        {
-            string[] allPrecompillers = CollectPrecompillers(parser, options);
-
-            StringBuilder sb = new StringBuilder();
-
-            foreach (string file in allPrecompillers)
-            {
-                if (file != "")
-                {
-                    sb.Append(FindImlementationFile(file, options.searchDirs));
-                    sb.Append(",");
-                }
+                #endif
             }
 
-            return CSSUtils.GetHashCodeEx(sb.ToString());
-        }
-#if !net1
-        public static string[] GetAppDomainAssemblies()
-        {
-            return (from a in AppDomain.CurrentDomain.GetAssemblies()
-                    where !CSSUtils.IsDynamic(a) && !a.GlobalAssemblyCache
-                    select a.Location).ToArray();
-        }
-#endif
-        public static bool IsDynamic(Assembly asm)
-        {
-            //http://bloggingabout.net/blogs/vagif/archive/2010/07/02/net-4-0-and-notsupportedexception-complaining-about-dynamic-assemblies.aspx
-            //Will cover both System.Reflection.Emit.AssemblyBuilder and System.Reflection.Emit.InternalAssemblyBuilder
-            return asm.GetType().FullName.EndsWith("AssemblyBuilder") || asm.Location == null || asm.Location == "";
-        }
-
-        public static Assembly CompilePrecompilerScript(string sourceFile, string[] searchDirs)
-        {
-            try
+            internal static int GenerateCompilationContext(CSharpParser parser, ExecuteOptions options)
             {
-                string precompilerAsm = Path.Combine(CSExecutor.GetCacheDirectory(sourceFile), Path.GetFileName(sourceFile) + ".compiled");
+                string[] allPrecompillers = CollectPrecompillers(parser, options);
 
-                using (Mutex fileLock = new Mutex(false, "CSSPrecompiling." + CSSUtils.GetHashCodeEx(precompilerAsm))) //have to use hash code as path delimiters are illegal in the mutex name
+                StringBuilder sb = new StringBuilder();
+
+                foreach (string file in allPrecompillers)
                 {
-                    //let other thread/process (if any) to finish loading/compiling the same file; 3 seconds should be enough
-                    //if not we will just fail to compile as precompilerAsm will still be locked.
-                    //Infinite timeout is not good choice here as it may block forever but continuing while the file is still locked will 
-                    //throw a nice informative exception.
+                    if (file != "")
+                    {
+                        sb.Append(FindImlementationFile(file, options.searchDirs));
+                        sb.Append(",");
+                    }
+                }
+
+                return CSSUtils.GetHashCodeEx(sb.ToString());
+            }
+
+            #if !net1
+        public static string[] GetAppDomainAssemblies()
+            {
+                return (from a in AppDomain.CurrentDomain.GetAssemblies()
+                where !CSSUtils.IsDynamic(a) && !a.GlobalAssemblyCache
+                    select a.Location).ToArray();
+            }
+
+            #endif
+        public static bool IsDynamic(Assembly asm)
+            {
+                //http://bloggingabout.net/blogs/vagif/archive/2010/07/02/net-4-0-and-notsupportedexception-complaining-about-dynamic-assemblies.aspx
+                //Will cover both System.Reflection.Emit.AssemblyBuilder and System.Reflection.Emit.InternalAssemblyBuilder
+            return asm.GetType().FullName.EndsWith("AssemblyBuilder") || asm.Location == null || asm.Location == "";
+            }
+
+            public static Assembly CompilePrecompilerScript(string sourceFile, string[] searchDirs)
+            {
+                try
+                {
+                    string precompilerAsm = Path.Combine(CSExecutor.GetCacheDirectory(sourceFile), Path.GetFileName(sourceFile) + ".compiled");
+
+                    using (Mutex fileLock = new Mutex(false, "CSSPrecompiling." + CSSUtils.GetHashCodeEx(precompilerAsm))) //have to use hash code as path delimiters are illegal in the mutex name
+                    {
+                        //let other thread/process (if any) to finish loading/compiling the same file; 3 seconds should be enough
+                        //if not we will just fail to compile as precompilerAsm will still be locked.
+                        //Infinite timeout is not good choice here as it may block forever but continuing while the file is still locked will 
+                        //throw a nice informative exception.
                     fileLock.WaitOne(3000, false);
 
-                    if (File.Exists(precompilerAsm))
-                    {
-                        if (File.GetLastWriteTimeUtc(sourceFile) <= File.GetLastWriteTimeUtc(precompilerAsm))
-                            return Assembly.LoadFrom(precompilerAsm);
+                        if (File.Exists(precompilerAsm))
+                        {
+                            if (File.GetLastWriteTimeUtc(sourceFile) <= File.GetLastWriteTimeUtc(precompilerAsm))
+                                return Assembly.LoadFrom(precompilerAsm);
 
-                        Utils.FileDelete(precompilerAsm, true);
-                    }
+                            Utils.FileDelete(precompilerAsm, true);
+                        }
 
-                    ScriptParser parser = new ScriptParser(sourceFile, searchDirs);
-                    CompilerParameters compilerParams = new CompilerParameters();
+                        ScriptParser parser = new ScriptParser(sourceFile, searchDirs);
+                        CompilerParameters compilerParams = new CompilerParameters();
 
-                    compilerParams.IncludeDebugInformation = true;
-                    compilerParams.GenerateExecutable = false;
-                    compilerParams.GenerateInMemory = false;
-                    compilerParams.OutputAssembly = precompilerAsm;
-#if net1
+                        compilerParams.IncludeDebugInformation = true;
+                        compilerParams.GenerateExecutable = false;
+                        compilerParams.GenerateInMemory = false;
+                        compilerParams.OutputAssembly = precompilerAsm;
+                        #if net1
                     ArrayList refAssemblies = new ArrayList();
-#else
+                        #else
                     List<string> refAssemblies = new List<string>();
-#endif
+                        #endif
 
-                    //add local and global assemblies (if found) that have the same assembly name as a namespace
+                        //add local and global assemblies (if found) that have the same assembly name as a namespace
                     foreach (string nmSpace in parser.ReferencedNamespaces)
-                        foreach (string asm in AssemblyResolver.FindAssembly(nmSpace, searchDirs))
-                            refAssemblies.Add(asm);
+                            foreach (string asm in AssemblyResolver.FindAssembly(nmSpace, searchDirs))
+                                refAssemblies.Add(asm);
 
-                    //add assemblies referenced from code
+                        //add assemblies referenced from code
                     foreach (string asmName in parser.ReferencedAssemblies)
-                        if (asmName.StartsWith("\"") && asmName.EndsWith("\"")) //absolute path
+                            if (asmName.StartsWith("\"") && asmName.EndsWith("\"")) //absolute path
                         {
                             //not-searchable assemblies
                             string asm = asmName.Replace("\"", "");
@@ -788,46 +798,46 @@ namespace csscript
                                 refAssemblies.Add(nameSpace + ".dll");
                         }
 
-                    ////////////////////////////////////////
+                        ////////////////////////////////////////
 #if net1
                 foreach (string asm in Utils.RemovePathDuplicates((string[])refAssemblies.ToArray(typeof(string))))
-#else
+                            #else
                     foreach (string asm in Utils.RemovePathDuplicates(refAssemblies.ToArray()))
-#endif
-                    {
-                        compilerParams.ReferencedAssemblies.Add(asm);
-                    }
+                            #endif
+                        {
+                            compilerParams.ReferencedAssemblies.Add(asm);
+                        }
 
-#pragma warning disable 618
+                        #pragma warning disable 618
                     CompilerResults result = new CSharpCodeProvider().CreateCompiler().CompileAssemblyFromFile(compilerParams, sourceFile);
-#pragma warning restore 618
+                        #pragma warning restore 618
 
                     if (result.Errors.Count != 0)
-                        throw CompilerException.Create(result.Errors, true);
+                            throw CompilerException.Create(result.Errors, true);
 
-                    if (!File.Exists(precompilerAsm))
-                        throw new Exception("Unknown building error");
+                        if (!File.Exists(precompilerAsm))
+                            throw new Exception("Unknown building error");
 
-                    File.SetLastWriteTimeUtc(precompilerAsm, File.GetLastWriteTimeUtc(sourceFile));
+                        File.SetLastWriteTimeUtc(precompilerAsm, File.GetLastWriteTimeUtc(sourceFile));
 
-                    Assembly retval = Assembly.LoadFrom(precompilerAsm);
+                        Assembly retval = Assembly.LoadFrom(precompilerAsm);
 
-                    return retval;
+                        return retval;
+                    }
+                }
+                catch (Exception e)
+                {
+                    throw new ApplicationException("Cannot load precompiler " + sourceFile + ": " + e.Message);
                 }
             }
-            catch (Exception e)
-            {
-                throw new ApplicationException("Cannot load precompiler " + sourceFile + ": " + e.Message);
-            }
-        }
 
-        static public bool IsRuntimeErrorReportingSupressed
-        {
-            get
+            static public bool IsRuntimeErrorReportingSupressed
             {
-                return Environment.GetEnvironmentVariable("CSS_IsRuntimeErrorReportingSupressed") != null;
+                get
+                {
+                    return Environment.GetEnvironmentVariable("CSS_IsRuntimeErrorReportingSupressed") != null;
+                }
             }
-        }
 
         public static int GetHashCodeEx(string s)
         {
@@ -856,17 +866,18 @@ namespace csscript
         //needed to have reliable HASH as x64 and x32 have different algorithms; This leads to the inability of script clients calculate cache directory correctly  
         static int GetHashCode32(string s)
         {
-            var chars = s.ToCharArray();
-            var lastCharInd = chars.Length - 1;
-            var num1 = 0x15051505;
-            var num2 = num1;
-            var ind = 0;
+            char[] chars = s.ToCharArray();
+            int lastCharInd = chars.Length - 1;
+            int num1 = 0x15051505;
+            int num2 = num1;
+            int ind = 0;
             while (ind <= lastCharInd)
             {
-                var ch = chars[ind];
-                var nextCh = ++ind > lastCharInd ? '\0' : chars[ind];
+                char ch = chars[ind];
+                char nextCh = ++ind > lastCharInd ? '\0' : chars[ind];
                 num1 = (((num1 << 5) + num1) + (num1 >> 0x1b)) ^ (nextCh << 16 | ch);
-                if (++ind > lastCharInd) break;
+                if (++ind > lastCharInd)
+                    break;
                 ch = chars[ind];
                 nextCh = ++ind > lastCharInd ? '\0' : chars[ind++];
                 num2 = (((num2 << 5) + num2) + (num2 >> 0x1b)) ^ (nextCh << 16 | ch);
