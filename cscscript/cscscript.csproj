@@ -159,7 +159,7 @@
       <Link>GACHelper.cs</Link>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="AssemblyInfo.cs">
+    <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="CSExecutionClient.cs">
@@ -183,12 +183,19 @@
       <Install>true</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>
     </PreBuildEvent>
     <PostBuildEvent>echo off
-REM you may need to comment the command below if your directory structure is incompatible
-copy "$(TargetPath)" ..\..\..\..\..\cscs.exe</PostBuildEvent>
+
+if "%25CS-S_DEV_ROOT%25" == "" go exit
+echo ------------------------------
+echo Updating local deployment folder "%25CS-S_DEV_ROOT%25"
+copy "$(TargetPath)" "%25CS-S_DEV_ROOT%25\cscs.exe"
+echo ------------------------------
+
+:exit</PostBuildEvent>
   </PropertyGroup>
 </Project>

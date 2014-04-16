@@ -58,8 +58,7 @@
     <DebugSymbols>true</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
     <NoStdLib>false</NoStdLib>
-    <NoWarn>
-    </NoWarn>
+    <NoWarn>1699</NoWarn>
     <Optimize>false</Optimize>
     <RegisterForComInterop>false</RegisterForComInterop>
     <RemoveIntegerChecks>false</RemoveIntegerChecks>
@@ -157,7 +156,7 @@
     <Compile Include="AsmHelper.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="AssemblyInfo.cs">
+    <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Crc32.cs" />
@@ -189,8 +188,14 @@
     <PreBuildEvent>
     </PreBuildEvent>
     <PostBuildEvent>echo off
-REM you may need to comment the command below if your directory structure is incompatible
-copy "$(TargetPath)" ..\..\..\..\..\Lib
-copy "$(TargetDir)$(TargetName).xml" ..\..\..\..\..\Lib</PostBuildEvent>
+
+if "%25CS-S_DEV_ROOT%25" == "" go exit
+echo ------------------------------
+echo Updating local deployment folder "%25CS-S_DEV_ROOT%25"
+copy "$(TargetPath)" "%25CS-S_DEV_ROOT%25\Lib"
+copy "$(TargetDir)$(TargetName).xml" "%25CS-S_DEV_ROOT%25\Lib"
+echo ------------------------------
+
+:exit</PostBuildEvent>
   </PropertyGroup>
 </Project>

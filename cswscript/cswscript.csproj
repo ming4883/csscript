@@ -160,7 +160,7 @@
     <Compile Include="..\Utils.cs">
       <Link>Utils.cs</Link>
     </Compile>
-    <Compile Include="AssemblyInfo.cs">
+    <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="CSExecutorClient.cs">
@@ -189,8 +189,13 @@
     <PreBuildEvent>
     </PreBuildEvent>
     <PostBuildEvent>echo off
-REM you may need to comment the command below if your directory structure is incompatible
-copy "$(TargetPath)" ..\..\..\..\..\csws.exe
-</PostBuildEvent>
+
+if "%25CS-S_DEV_ROOT%25" == "" go exit
+echo ------------------------------
+echo Updating local deployment folder "%25CS-S_DEV_ROOT%25"
+copy "$(TargetPath)" "%25CS-S_DEV_ROOT%25\csws.exe"
+echo ------------------------------
+
+:exit</PostBuildEvent>
   </PropertyGroup>
 </Project>
