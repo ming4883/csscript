@@ -214,8 +214,21 @@
         </member>
         <member name="P:csscript.Settings.CustomHashing">
             <summary>
-            
+            Gets or sets a value indicating whether custom string hashing algorithm should be used.
+            <para>
+            String hashing is used by the script engine for allocating temporary and cached paths. 
+            However default string hashing is platform dependant (x32 vs. x64) what makes impossible 
+            truly deterministic string hashing. This in turns complicates the integration of the 
+            CS-Script infrastructure with the third-party applications (e.g. Notepad++ CS-Script plugin).
+            </para>
+            <para>
+            To overcome this problem CS-Script uses custom string hashing algorithm (default setting).
+            Though the native .NET hashing can be enabled if desired by setting <c>CustomHashing</c>
+            to <c>false</c>.</para>
             </summary>
+            <value>
+              <c>true</c> if custom hashing is in use; otherwise, <c>false</c>.
+            </value>
         </member>
         <member name="P:csscript.Settings.ReportDetailedErrorInfo">
             <summary>

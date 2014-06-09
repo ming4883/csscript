@@ -335,7 +335,7 @@ namespace Config
             this.checkedListBox1.Name = "checkedListBox1";
             this.checkedListBox1.Size = new System.Drawing.Size(396, 139);
             this.checkedListBox1.TabIndex = 10;
-            this.toolTip1.SetToolTip(this.checkedListBox1, "Select menu itens you wnt to appear in the Explorer context menu");
+            this.toolTip1.SetToolTip(this.checkedListBox1, "Select menu items you wnt to appear in the Explorer context menu");
             this.checkedListBox1.Click += new System.EventHandler(this.checkedListBox1_Click);
             this.checkedListBox1.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.checkedListBox1_KeyPress);
             // 
@@ -821,7 +821,7 @@ namespace Config
 
             SetEnvVarsIfUnderDev();
 
-            System.Diagnostics.Debug.Assert(false);
+            //System.Diagnostics.Debug.Assert(false);
 
             AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(ResolveAsm);
 
@@ -1116,7 +1116,7 @@ namespace Config
             Environment.SetEnvironmentVariable("ConfigConsoleLoaded", "true"); //loosely coupled notification as the progress SplashScreen can be in another assembly
 
             //SplashScreen.HideSplash();
-
+            //System.Diagnostics.Assert(false);
             advancedShellEx.Checked = CSScriptInstaller.IsComShellExtInstalled();
             allFilesAdvancedShellEx.Checked = CSScriptInstaller.IsComShellExtInstalledForAllFiles();
             allFilesAdvancedShellEx.Enabled = advancedShellEx.Checked;
@@ -1186,8 +1186,7 @@ namespace Config
         private void OnCheckHandler(object o, TreeViewEventArgs arg)
         {
             //MessageBox.Show("If you want to modify menu item click 'Configure Shell Extension' link.");
-            using (Form f = new CSSScript.ShellExForm())
-                f.ShowDialog();
+            ConfigureShellExtensions();
         }
 
         private void integrateVS_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
@@ -1239,6 +1238,11 @@ namespace Config
         }
 
         private void configureShellExt_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            ConfigureShellExtensions();
+        }
+    
+        void ConfigureShellExtensions()
         {
             string homeDir = CSScriptInstaller.GetEnvironmentVariable("CSSCRIPT_DIR");
             if (homeDir != null)
@@ -1755,7 +1759,7 @@ namespace Config
 
         public CSScriptInstaller(bool quiet, bool update)
         {
-            System.Diagnostics.Debug.Assert(false);
+            //System.Diagnostics.Debug.Assert(false);
             this.quiet = quiet;
 
             //analyse previous installations
@@ -2102,7 +2106,7 @@ namespace Config
 
         public void Install(bool installShellExtension)
         {
-            System.Diagnostics.Debug.Assert(false);
+            //System.Diagnostics.Debug.Assert(false);
             string path = "";
             using (RegistryKey envVars = Registry.LocalMachine.OpenSubKey("SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment", true))
             {

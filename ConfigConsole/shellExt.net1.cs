@@ -32,18 +32,19 @@ namespace CSSScript
             InitializeComponent();
             upBtn.Text =
             downBtn.Text = "";
-#if NET2
+            #if NET2
             treeView1.DrawMode = TreeViewDrawMode.OwnerDrawText;
-#endif
+            #endif
         }
+
         public ShellExForm()
         {
             InitializeComponent();
             upBtn.Text =
             downBtn.Text = "";
-#if NET2
+            #if NET2
             treeView1.DrawMode = TreeViewDrawMode.OwnerDrawText;
-#endif
+            #endif
         }
 
         protected override void Dispose(bool disposing)
@@ -55,8 +56,10 @@ namespace CSSScript
                     components.Dispose();
                 }
             }
+
             base.Dispose(disposing);
         }
+
         #region Windows Form Designer generated code
         private void InitializeComponent()
         {
@@ -147,7 +150,8 @@ namespace CSSScript
             this.helpBtn.Click += new System.EventHandler(this.helpBtn_Click);
             // 
             // refreshBtn
-            // 
+            //
+            this.refreshBtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.refreshBtn.Location = new System.Drawing.Point(413, 82);
             this.refreshBtn.Name = "refreshBtn";
             this.refreshBtn.Size = new System.Drawing.Size(75, 23);
@@ -469,6 +473,7 @@ namespace CSSScript
                         ignoreChecking = true;
                         e.Node.Checked = !e.Node.Checked;
                         ignoreChecking = false;
+                        MessageBox.Show("Disabling 'parent' menus is not supported.\nIf you want to control such menu items you need to press 'Browse' button and adjust the corresponding directories.");
                     }
                     else
                     {
@@ -571,10 +576,10 @@ namespace CSSScript
                 int height = img.Height;
 
                 float[][] colorMatrixElements = {   new float[] {1,  0,  0,  0, 0},        // red scaling factor of 1
-												    new float[] {0,  1,  0,  0, 0},        // green scaling factor of 1
-												    new float[] {0,  0,  1,  0, 0},        // blue scaling factor of 1
-												    new float[] {0,  0,  0,  1, 0},        // alpha scaling factor of 1
-												    new float[] {.05f, .05f, .05f, 0, 1}};    // three translations of 0.2
+                                                    new float[] {0,  1,  0,  0, 0},        // green scaling factor of 1
+                                                    new float[] {0,  0,  1,  0, 0},        // blue scaling factor of 1
+                                                    new float[] {0,  0,  0,  1, 0},        // alpha scaling factor of 1
+                                                    new float[] {.05f, .05f, .05f, 0, 1}};    // three translations of 0.2
 
                 ColorMatrix colorMatrix = new ColorMatrix(colorMatrixElements);
 

@@ -167,7 +167,9 @@ copy CSScriptLibrary.dll "%local_dev%\Samples\Hosting\CodeDOM\VS2012 project\Lib
 copy CSScriptLibrary.dll.unsigned "%local_dev%\Lib\Bin\NET 4.5\CSScriptLibrary.dll.unsigned"
 copy cscs.exe "%local_dev%\cscs.exe"
 copy csws.exe "%local_dev%\csws.exe"
+copy css_config.exe "%local_dev%\css_config.exe"
 copy css_config.exe ..\..\..\css_config.exe
+copy ConfigConsole.exe "%local_dev%\Lib\ConfigConsole\ConfigConsole.exe"
 copy ..\Mono.CSharp.dll Mono.CSharp.dll
 copy ..\Mono.CSharp.dll "%local_dev%\Lib\Mono.CSharp.dll"
 copy CSScriptLibrary.dll "%local_dev%\Lib\CSScriptLibrary.dll"

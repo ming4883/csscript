@@ -70,9 +70,9 @@ public partial class SplashScreen : Form
             this.label1.BackColor = System.Drawing.Color.Transparent;
             this.label1.Location = new System.Drawing.Point(44, 29);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(353, 13);
+            this.label1.Size = new System.Drawing.Size(356, 13);
             this.label1.TabIndex = 2;
-            this.label1.Text = "CS-Script v3.4.1 - Copyright © 2004-2013 Oleg Shilo. All Rights Reserved";
+            this.label1.Text = "CS-Script v0.0.0. - Copyright © 2004-2014 Oleg Shilo. All Rights Reserved";
             // 
             // timer1
             // 

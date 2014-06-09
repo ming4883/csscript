@@ -12,20 +12,20 @@
 //----------------------------------------------
 // The MIT License (MIT)
 // Copyright (c) 2014 Oleg Shilo
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software 
-// and associated documentation files (the "Software"), to deal in the Software without restriction, 
-// including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-// and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, 
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+// and associated documentation files (the "Software"), to deal in the Software without restriction,
+// including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
 // subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all copies or substantial 
+//
+// The above copyright notice and this permission notice shall be included in all copies or substantial
 // portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT 
-// LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
-// IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, 
-// WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+// LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+// IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+// WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 // SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //----------------------------------------------
 
@@ -206,7 +206,8 @@ public static class CSScriptLibraryExtensionMethods
     internal static string BuildAlignToInterfaceCode<T>(this object obj, out string typeFuleName) where T : class
     {
         return CSScriptLibrary.ThirdpartyLibraries.Rubenhak.Utils.ObjectCaster<T>.BuildProxyClassCode(typeof(T), obj.GetType(), out typeFuleName); ;
-    } 
+    }
+
     /// <summary>
     /// Attempts to align (pseudo typecast) object to interface.
     /// <para>The object does not necessarily need to implement the interface formally.</para>
@@ -242,6 +243,25 @@ public static class CSScriptLibraryExtensionMethods
     {
         return CSScriptLibrary.ThirdpartyLibraries.Rubenhak.Utils.ObjectCaster<T>.As(obj, refAssemblies);
     }
+    /// <summary>
+    /// Attempts to align (pseudo typecast) object to interface.
+    /// <para>The object does not necessarily need to implement the interface formally.</para>
+    /// <para>See <see cref="T:CSScriptLibrary.ThirdpartyLibraries.Rubenhak.Utils.ObjectCaster"/>.</para>
+    /// </summary>
+    /// <typeparam name="T">Interface definition to align with.</typeparam>
+    /// <param name="obj">The object to be aligned with the interface.</param>
+    /// <param name="useAppDomainAssemblies">If set to <c>true</c> uses all loaded assemblies of the current <see cref="T:System.AppDomain"/>
+    /// when emitting (compiling) aligned proxy object.</param>
+    /// <param name="refAssemblies">The string array containing file names to the additional dependency
+    /// assemblies the interface depends in. </param>
+    /// <returns>Interface object or <c>null</c> if alignment was unsuccessful.</returns>
+    public static T TryAlignToInterface<T>(this object obj, bool useAppDomainAssemblies, params string[] refAssemblies) where T : class
+    {
+        if (useAppDomainAssemblies)
+            refAssemblies = Utils.Concat(CSSUtils.GetAppDomainAssemblies(), refAssemblies);
+
+        return CSScriptLibrary.ThirdpartyLibraries.Rubenhak.Utils.ObjectCaster<T>.As(obj, refAssemblies);
+    }
 
     /// <summary>
     /// Aligns (pseudo typecasts) object to interface.
@@ -270,12 +290,34 @@ public static class CSScriptLibraryExtensionMethods
     /// </summary>
     /// <typeparam name="T">Interface definition to align with.</typeparam>
     /// <param name="obj">The object to be aligned with the interface.</param>
-    /// <param name="refAssemblies">The string array containing file nemes to the additional dependency
+    /// <param name="refAssemblies">The string array containing file names to the additional dependency
     /// assemblies the interface depends in. </param>
     /// <returns>Interface object.</returns>
     public static T AlignToInterface<T>(this object obj, params string[] refAssemblies) where T : class
     {
         var retval = obj.TryAlignToInterface<T>(refAssemblies);
+
+        if (retval == null)
+            throw new ApplicationException("The object (" + obj + ") cannot be aligned to " + typeof(T) + " interface.");
+
+        return retval;
+    }
+
+    /// <summary>
+    /// Aligns (pseudo typecasts) object to interface.
+    /// <para>The object does not necessarily need to implement the interface formally.</para>
+    /// <para>See <see cref="T:CSScriptLibrary.ThirdpartyLibraries.Rubenhak.Utils.ObjectCaster"/>.</para>
+    /// </summary>
+    /// <typeparam name="T">Interface definition to align with.</typeparam>
+    /// <param name="obj">The object to be aligned with the interface.</param>
+    /// <param name="useAppDomainAssemblies">If set to <c>true</c> uses all non-GAC loaded assemblies of the current <see cref="T:System.AppDomain"/>
+    /// when emitting (compiling) aligned proxy object.</param>
+    /// <param name="refAssemblies">The string array containing file names to the additional dependency
+    /// assemblies the interface depends in. </param>
+    /// <returns>Interface object.</returns>
+    public static T AlignToInterface<T>(this object obj, bool useAppDomainAssemblies, params string[] refAssemblies) where T : class
+    {
+        var retval = obj.TryAlignToInterface<T>(useAppDomainAssemblies, refAssemblies);
 
         if (retval == null)
             throw new ApplicationException("The object (" + obj + ") cannot be aligned to " + typeof(T) + " interface.");
