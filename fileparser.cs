@@ -200,7 +200,7 @@ namespace CSScriptLibrary
 
         public string[] ReferencedNamespaces
         {
-            get { return parser.RefNamespaces; }
+            get { return Utils.Except(parser.RefNamespaces, parser.IgnoreNamespaces); }
         }
 
         public string[] IgnoreNamespaces
@@ -255,7 +255,7 @@ namespace CSScriptLibrary
                 referencedScripts.Add(new ScriptInfo(info));
             }
             referencedAssemblies.AddRange(parser.RefAssemblies);
-            referencedNamespaces.AddRange(parser.RefNamespaces);
+            referencedNamespaces.AddRange(Utils.Except(parser.RefNamespaces, parser.IgnoreNamespaces));
             referencedResources.AddRange(parser.ResFiles);
 
             if (imported)
