@@ -271,6 +271,10 @@ namespace csscript
         /// <param name="directivesToSearch">Additional C# script directives to search. The search result is stored in CSharpParser.CustomDirectives.</param>
         public void Init(string code, string file, string[] directivesToSearch)
         {
+            string workingDir = Environment.CurrentDirectory;
+            if (file != "")
+                workingDir = Path.GetDirectoryName(file);
+
             this.code = code;
 
             //analyse comments and strings
@@ -357,9 +361,9 @@ namespace csscript
 
             //analyse resource references
             foreach (string statement in GetRawStatements("//css_searchdir", endCodePos))
-                searchDirs.Add(Environment.ExpandEnvironmentVariables(statement).Trim());
+                searchDirs.AddRange(CSSUtils.GetDirectories(workingDir, Environment.ExpandEnvironmentVariables(statement).Trim()));
             foreach (string statement in GetRawStatements("//css_dir", endCodePos))
-                searchDirs.Add(Environment.ExpandEnvironmentVariables(statement).Trim());
+                searchDirs.AddRange(CSSUtils.GetDirectories(workingDir, Environment.ExpandEnvironmentVariables(statement).Trim()));
 
             //analyse namespace references
             foreach (string statement in GetRawStatements("using", endCodePos, true))

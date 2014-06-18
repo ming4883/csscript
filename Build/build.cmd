@@ -231,6 +231,6 @@ RD temp
 
 notepad build.log
 del build.log
-
+:exit
 
 

@@ -49,6 +49,7 @@ using Microsoft.CSharp;
 using System.Globalization;
 using System.Threading;
 using System.Collections;
+using System.Text.RegularExpressions;
 
 namespace csscript
 {
@@ -358,6 +359,87 @@ namespace csscript
                     return "/";
             }
         }
+
+        static internal string[] GetDirectories(string workingDir, string rootDir)
+        {
+            if (!Path.IsPathRooted(rootDir))
+                rootDir = Path.Combine(workingDir, rootDir); //cannot use Path.GetFullPath as it crashes if '*' or '?' are present
+#if net1
+            return new string [] { rootDir };
+#else
+
+            List<string> result = new List<string>();
+
+            if (rootDir.Contains("*") || rootDir.Contains("?"))
+            {
+                if (rootDir.EndsWith("**"))
+                {
+                    foreach (string dir in Directory.GetDirectories(rootDir.Remove(rootDir.Length - 2), "*", SearchOption.AllDirectories))
+                        result.Add(dir);
+                }
+                else
+                {
+                    string pattern = ConvertSimpleExpToRegExp(rootDir);
+                    Regex wildcard = new Regex(pattern, RegexOptions.IgnoreCase);
+
+                    int pos = rootDir.IndexOfAny(new char[] { '*', '?' });
+
+                    string newRootDir = rootDir.Remove(pos);
+
+                    pos = newRootDir.LastIndexOf(Path.DirectorySeparatorChar);
+                    newRootDir = rootDir.Remove(pos);
+
+                    foreach (string dir in Directory.GetDirectories(newRootDir, "*", SearchOption.AllDirectories))
+                        if (wildcard.IsMatch(dir))
+                            result.Add(dir);
+                }
+            }
+            else
+                result.Add(rootDir);
+
+            return result.ToArray();
+#endif
+        }
+
+        //Credit to MDbg team: https://github.com/SymbolSource/Microsoft.Samples.Debugging/blob/master/src/debugger/mdbg/mdbgCommands.cs
+        public static string ConvertSimpleExpToRegExp(string simpleExp)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append("^");
+            foreach (char c in simpleExp)
+            {
+                switch (c)
+                {
+                    case '\\':
+                    case '{':
+                    case '|':
+                    case '+':
+                    case '[':
+                    case '(':
+                    case ')':
+                    case '^':
+                    case '$':
+                    case '.':
+                    case '#':
+                    case ' ':
+                        sb.Append('\\').Append(c);
+                        break;
+                    case '*':
+                        sb.Append(".*");
+                        break;
+                    case '?':
+                        sb.Append(".");
+                        break;
+                    default:
+                        sb.Append(c);
+                        break;
+                }
+            }
+
+            sb.Append("$");
+            return sb.ToString();
+        }
+
 
         /// <summary>
         /// Parses application (script engine) arguments.
@@ -1413,6 +1495,13 @@ namespace csscript
                 builder.Append("directory - name of the directory to be used for script and assembly probing at run-time.\n");
                 builder.Append("\n");
                 builder.Append("This directive is used to extend set of search directories (script and assembly probing).\n");
+#if !net1
+                builder.Append("The directory name can be a wild card based expression.In such a case all directories matching the pattern will be this \n");
+                builder.Append("case all directories will be probed.\n");
+                builder.Append("The special case when the path ends with '**' is reserved to indicate 'sub directories' case. Examples:\n");
+                builder.Append("    //css_dir packages\\ServiceStack*.1.0.21\\lib\\net40\n");
+                builder.Append("    //css_dir packages\\**\n");
+#endif
                 builder.Append("------------------------------------\n");
                 builder.Append("//css_resource <file>;\n");
                 builder.Append("\n");
