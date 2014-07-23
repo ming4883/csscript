@@ -241,7 +241,7 @@ namespace CSScriptLibrary
             //
             //Fortunately the defaults are OK.
             CompilerSettings = new CompilerSettings();
-            service = new MCS.Evaluator(CompilerSettings, new Report(CompilingResult));
+            service = new MCS.Evaluator(new CompilerContext(CompilerSettings, CompilingResult));
 
             if (referenceDomainAssemblies)
                 ReferenceDomainAssemblies();
@@ -437,6 +437,10 @@ namespace CSScriptLibrary
         /// <returns>Instance of the class defined in the script.</returns>
         public object LoadCode(string scriptText)
         {
+            //Starting with from Mono v3.3.0 Mono.CSharp.Evaluator does not 
+            //return compiled class reliably (as the first '*' type).
+            //This is because Evaluator now injects "<InteractiveExpressionClass>" as the first class.
+
             return CompileCode(scriptText)
                       .GetCompiledAssembly()
                       .CreateObject("*");
@@ -490,6 +494,7 @@ namespace CSScriptLibrary
         public T LoadCode<T>(string scriptText) where T : class
         {
             var script = LoadCode(scriptText);
+
             string type = "";
             string proxyClass = script.BuildAlignToInterfaceCode<T>(out type);
 
@@ -700,7 +705,8 @@ namespace CSScriptLibrary
         {
             HandleCompilingErrors(() =>
             {
-                service.Compile(scriptText + ConnectionPointClassDeclaration);
+                var method = service.Compile(scriptText + ConnectionPointClassDeclaration);
+                //cannot rely on 'method' as it is null in CS-Script scenarios 
             });
             return this;
         }
@@ -914,7 +920,8 @@ namespace CSScriptLibrary
         /// Handles compilation event message.
         /// </summary>
         /// <param name="msg">The compilation event message.</param>
-        public override void Print(Mono.CSharp.AbstractMessage msg)
+        /// <param name="showFullPath">if set to <c>true</c> [show full path].</param>
+        public override void Print(Mono.CSharp.AbstractMessage msg, bool showFullPath)
         {
             string msgInfo = string.Format("{0} {1} CS{2:0000}: {3}", msg.Location, msg.MessageType, msg.Code, msg.Text);
             if (!msg.IsWarning)

@@ -577,7 +577,7 @@ namespace CSScriptLibrary
         }
 
         /// <summary>
-        /// Specialised version of GetMethodInvoker which returns MethodDelegate thus you do not need to specify
+        /// Specialized version of GetMethodInvoker which returns MethodDelegate thus you do not need to specify
         /// object instance when calling instance methods as delegate will maintain the instance object internally.
         /// </summary>
         /// <param name="instance">Instance of the type, which implements method is to be wrapped by MethodDelegate.</param>
@@ -1172,6 +1172,10 @@ namespace CSScriptLibrary
                     types = m.FindTypes(Module.FilterTypeName, names[names.Length - 2]);
 
                 foreach (Type t in types)
+                {
+                    if (t.FullName == "<InteractiveExpressionClass>")
+                        continue;
+
                     if (methodShortName == "*")
                     {
                         MethodInfo[] methods = t.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
@@ -1185,6 +1189,7 @@ namespace CSScriptLibrary
                         else if (methodName == method.DeclaringType.FullName + "." + methodShortName)
                             return method;
                     }
+                }
             }
 
             string msg = "Method " + methodName + "(";
@@ -1246,7 +1251,14 @@ namespace CSScriptLibrary
             {
                 //note typeName for FindTypes does not include namespace
                 if (typeName == "*")
-                    return asm.CreateInstance(asm.GetModules()[0].GetTypes()[0].FullName); //instantiate the first type found
+                {
+                    //instantiate the first type found (but not auto-generated types)
+                    foreach (Type type in asm.GetModules()[0].GetTypes())
+                        if (type.FullName != "<InteractiveExpressionClass>")
+                            return asm.CreateInstance(type.FullName);
+
+                    return null;
+                }
                 else
                 {
                     Type[] types = asm.GetModules()[0].FindTypes(Module.FilterTypeName, typeName);
