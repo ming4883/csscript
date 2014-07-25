@@ -247,6 +247,7 @@ namespace CSScriptLibrary
                 ReferenceDomainAssemblies();
         }
 
+        static Assembly mscorelib = 333.GetType().Assembly; //actual runtime assembly
 #if net35
         /// <summary>
         /// References the all non-GAC domain assemblies.
@@ -266,15 +267,20 @@ namespace CSScriptLibrary
         public Evaluator ReferenceDomainAssemblies(DomainAssemblies assemblies = DomainAssemblies.AllStaticNonGAC) //if GAC assemblies are loaded the duplicated object definitions are reported even if CompilerSettings.LoadDefaultReferences = false
 #endif
         {
+            //NOTE: It is important to avoid loading the runtime itself (mscorelib) as it 
+            //will break the code evaluation (compilation).
+            //
+            //On .NET mscorelib is filtered out by GlobalAssemblyCache check but
+            //on Mono it passes through so there is a need to do a specific check for mscorelib assembly. 
             var relevantAssemblies = AppDomain.CurrentDomain.GetAssemblies();
 
             if (assemblies == DomainAssemblies.AllStatic)
             {
-                relevantAssemblies = relevantAssemblies.Where(x => !CSSUtils.IsDynamic(x)).ToArray();
+                relevantAssemblies = relevantAssemblies.Where(x => !CSSUtils.IsDynamic(x) && x != mscorelib).ToArray();
             }
             else if (assemblies == DomainAssemblies.AllStaticNonGAC)
             {
-                relevantAssemblies = relevantAssemblies.Where(x => !x.GlobalAssemblyCache && !CSSUtils.IsDynamic(x)).ToArray();
+                relevantAssemblies = relevantAssemblies.Where(x => !x.GlobalAssemblyCache && !CSSUtils.IsDynamic(x) &&  x != mscorelib).ToArray();
             }
             else if (assemblies == DomainAssemblies.None)
             {
