@@ -732,6 +732,9 @@ namespace CSScriptLibrary
 
                     foreach (string resFile in importedFile.ReferencedResources)
                         PushResource(resFile);
+
+                    foreach (string file in importedFile.IgnoreNamespaces)
+                        PushIgnoreNamespace(file);
 #if net1
                     ArrayList dirs = new ArrayList(this.SearchDirs);
                     foreach (string dir in importedFile.ExtraSearchDirs)
