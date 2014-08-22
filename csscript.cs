@@ -1307,6 +1307,7 @@ namespace csscript
             compilerParams.IncludeDebugInformation = options.DBG;
             compilerParams.GenerateExecutable = generateExe;
             compilerParams.GenerateInMemory = false;
+            compilerParams.WarningLevel = (options.hideCompilerWarnings ? -1 : 4);
 
             string[] filesToCompile = new string[parser.FilesToCompile.Length];
             Array.Copy(parser.FilesToCompile, filesToCompile, parser.FilesToCompile.Length);
@@ -1509,7 +1510,7 @@ namespace csscript
         {
             LastCompileResult = results;
 
-            if (results.Errors.Count != 0)
+            if (results.Errors.HasErrors)
             {
                 throw CompilerException.Create(results.Errors, options.hideCompilerWarnings);
             }

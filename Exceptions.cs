@@ -116,7 +116,7 @@ namespace csscript
         }
 
         /// <summary>
-        /// Creates the CompilerException instance from the specified compiler errors errors.
+        /// Creates the CompilerException instance from the specified compiler errors.
         /// </summary>
         /// <param name="Errors">The compiler errors.</param>
         /// <param name="hideCompilerWarnings">if set to <c>true</c> hide compiler warnings.</param>
