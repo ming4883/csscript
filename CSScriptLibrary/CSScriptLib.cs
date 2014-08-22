@@ -895,6 +895,7 @@ namespace CSScriptLibrary
             options.cleanupShellCommand = settings.CleanupShellCommand;
             options.customHashing = settings.CustomHashing;
             options.inMemoryAsm = settings.InMemoryAsssembly;
+            options.hideCompilerWarnings = settings.HideCompilerWarnings;
             options.TargetFramework = settings.TargetFramework;
             options.doCleanupAfterNumberOfRuns = settings.DoCleanupAfterNumberOfRuns;
             options.useCompiled = CSScript.CacheEnabled;
