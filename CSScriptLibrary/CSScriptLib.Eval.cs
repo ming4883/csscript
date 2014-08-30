@@ -447,9 +447,7 @@ namespace CSScriptLibrary
             //return compiled class reliably (as the first '*' type).
             //This is because Evaluator now injects "<InteractiveExpressionClass>" as the first class.
 
-            return CompileCode(scriptText)
-                      .GetCompiledAssembly()
-                      .CreateObject("*");
+            return CompileCode(scriptText).CreateObject("*");
         }
 
         /// <summary>
@@ -636,8 +634,7 @@ namespace CSScriptLibrary
         public MethodDelegate CreateDelegate(string code)
         {
             string scriptText = CSScript.WrapMethodToAutoClass(code, true);
-            CompileCode(scriptText);
-            return GetCompiledAssembly().GetStaticMethod();
+            return CompileCode(scriptText).GetStaticMethod();
         }
 
         /// <summary>
@@ -660,7 +657,7 @@ namespace CSScriptLibrary
         public T LoadDelegate<T>(string code) where T : class
         {
             string scriptText = CSScript.WrapMethodToAutoClass(code, true);
-            Assembly asm = CompileCode(scriptText).GetCompiledAssembly();
+            Assembly asm = CompileCode(scriptText);
             var method = asm.GetType("Scripting.DynamicClass").GetMethods().First();
             return System.Delegate.CreateDelegate(typeof(T), method) as T;
         }
@@ -672,25 +669,20 @@ namespace CSScriptLibrary
         /// </summary>
         /// <param name="code">The C# code.</param>
         /// <returns>The instance of the <see cref="T:CSScriptLibrary.Evluator"/>.</returns>
-        public Evaluator CompileMethod(string code)
+        public Assembly CompileMethod(string code)
         {
             string scriptText = CSScript.WrapMethodToAutoClass(code, false);
-            CompileCode(scriptText);
-            return this;
+            return CompileCode(scriptText);
         }
 
-        /// <summary>
-        /// Gets the assembly compiled with the last Compile*/Load* call.
-        /// </summary>
-        /// <returns>Instance of the <see cref="T:System:Reflection.Assembly"/>.</returns>
-        public Assembly GetCompiledAssembly()
+        Assembly GetCompiledAssembly(int id)
         {
-            return ((Type)service.Evaluate(ConnectionPointGetTypeExpression)).Assembly;
+            string className = GetConnectionPointGetTypeExpression(id);
+            return ((Type)service.Evaluate(className)).Assembly;
         }
 
-        const string ConnectionPointClassName = "CSS_ConnectionPoint";
-        const string ConnectionPointClassDeclaration = "\n public struct CSS_ConnectionPoint {}";
-        const string ConnectionPointGetTypeExpression = "typeof(CSS_ConnectionPoint);";
+        string GetConnectionPointClassDeclaration(int id) { return "\n public struct CSS_ConnectionPoint_"+id+" {}";}
+        string GetConnectionPointGetTypeExpression(int id) { return "typeof(CSS_ConnectionPoint_" + id + ");"; }
 
         /// <summary>
         /// Gets a type from the last Compile/Evaluate/Load call.
@@ -702,19 +694,26 @@ namespace CSScriptLibrary
             return (Type)service.Evaluate("typeof(" + type + ");");
         }
 
+
+        static int AsnCounter = 0;
+
         /// <summary>
         /// Evaluates (compiles) C# code.
         /// </summary>
         /// <param name="scriptText">The C# script text.</param>
-        /// <returns>The instance of the <see cref="T:CSScriptLibrary.Evluator"/>.</returns>
-        public Evaluator CompileCode(string scriptText)
+        /// <returns>The compiled assembly.</returns>
+        public Assembly CompileCode(string scriptText)
         {
+            Assembly result = null;
+
             HandleCompilingErrors(() =>
             {
-                var method = service.Compile(scriptText + ConnectionPointClassDeclaration);
+                int id = AsnCounter++;
+                var method = service.Compile(scriptText + GetConnectionPointClassDeclaration(id));
+                result = GetCompiledAssembly(id);
                 //cannot rely on 'method' as it is null in CS-Script scenarios 
             });
-            return this;
+            return result;
         }
 
         MCS.Evaluator service;
