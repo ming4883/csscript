@@ -13,20 +13,20 @@
 //----------------------------------------------
 // The MIT License (MIT)
 // Copyright (c) 2014 Oleg Shilo
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software 
-// and associated documentation files (the "Software"), to deal in the Software without restriction, 
-// including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-// and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, 
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+// and associated documentation files (the "Software"), to deal in the Software without restriction,
+// including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
 // subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all copies or substantial 
+//
+// The above copyright notice and this permission notice shall be included in all copies or substantial
 // portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT 
-// LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
-// IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, 
-// WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+// LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+// IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+// WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 // SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //----------------------------------------------
 
@@ -52,7 +52,6 @@ using System.Collections.Generic;
 #endif
 
 using System.Text;
-using System.Windows.Forms;
 using CSScriptLibrary;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -667,14 +666,14 @@ namespace csscript
                     }
 
                     bool fileUnlocked = false;
-                    //Infinite timeout is not good choice here as it may block forever but continuing while the file is still locked will 
+                    //Infinite timeout is not good choice here as it may block forever but continuing while the file is still locked will
                     //throw a nice informative exception.
                     using (Mutex fileLock = new Mutex(false, "Process." + CSSUtils.GetHashCodeEx(options.scriptFileName).ToString()))
                         try
                         {
                             int start = Environment.TickCount;
 
-                            //infinite is not good here as it may block forever but continuing while the file is still locked will 
+                            //infinite is not good here as it may block forever but continuing while the file is still locked will
                             //throw a nice informative exception
                             fileLock.WaitOne(3000, false); //let other thread/process (if any) to finish loading/compiling the same file; 3 seconds should be enough, if you need more use more sophisticated synchronization
 
@@ -1257,8 +1256,6 @@ namespace csscript
                 return asm;
         }
 
-
-
         /// <summary>
         /// Compiles C# script file.
         /// </summary>
@@ -1295,15 +1292,15 @@ namespace csscript
                 else
                     options.preCompilers += "," + FileParser.ResolveFile(file, options.searchDirs);
 
+            if (options.compilerOptions != string.Empty)
+                Utils.AddCompilerOptions(compilerParams, options.compilerOptions);
+
             foreach (string option in parser.CompilerOptions)
                 Utils.AddCompilerOptions(compilerParams, option);
 
             if (options.DBG)
                 Utils.AddCompilerOptions(compilerParams, "/d:DEBUG /d:TRACE");
-
-            if (options.compilerOptions != string.Empty)
-                Utils.AddCompilerOptions(compilerParams, options.compilerOptions);
-
+            
             compilerParams.IncludeDebugInformation = options.DBG;
             compilerParams.GenerateExecutable = generateExe;
             compilerParams.GenerateInMemory = false;
@@ -1516,6 +1513,14 @@ namespace csscript
             }
             else
             {
+                if (options.verbose)
+                {
+                    Console.WriteLine("  Compiler Oputput: ", options);
+                    foreach (CompilerError err in results.Errors)
+                        Console.WriteLine("  {0}({1},{2}):{3} {4} {5}", err.FileName, err.Line, err.Column, (err.IsWarning ? "warning" : "error"), err.ErrorNumber, err.ErrorText);
+                    Console.WriteLine("> ----------------", options);
+                }
+
                 if (!options.DBG) //.pdb and imported files might be needed for the debugger
                 {
                     parser.DeleteImportedFiles();
