@@ -55,4 +55,4 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyKeyFile("")]
 [assembly: AssemblyKeyName("")]
 
-[assembly: AssemblyVersion("3.8.7.0")]
+[assembly: AssemblyVersion("3.8.8.0")]

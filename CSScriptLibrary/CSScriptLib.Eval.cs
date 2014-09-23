@@ -13,20 +13,20 @@
 //----------------------------------------------
 // The MIT License (MIT)
 // Copyright (c) 2014 Oleg Shilo
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software 
-// and associated documentation files (the "Software"), to deal in the Software without restriction, 
-// including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-// and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, 
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+// and associated documentation files (the "Software"), to deal in the Software without restriction,
+// including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
 // subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in all copies or substantial 
+//
+// The above copyright notice and this permission notice shall be included in all copies or substantial
 // portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT 
-// LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
-// IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, 
-// WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+// LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+// IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+// WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 // SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //----------------------------------------------
 
@@ -111,6 +111,18 @@ namespace CSScriptLibrary
         public bool ThrowOnError { get; set; }
 
         /// <summary>
+        /// Gets or sets a value indicating whether to reset <c>Mono.Evaluator</c> automatically after it fails
+        /// to compile the code.
+        /// <para>It is a work around for the <c>Mono.Evaluator</c> (v4.0.0.0), which cannot longer compile the valid C# code
+        /// after the first compilation failure.</para>
+        /// <para>This setting allows auto recreation (reset) of the actual <c>Mono.Evaluator</c> service.</para>
+        /// </summary>
+        /// <value>
+        /// <c>true</c> if <c>Mono.Evaluator</c> is to be reset automatically; otherwise, <c>false</c>.
+        /// </value>
+        public bool AutoResetEvaluatorOnError { get; set; }
+
+        /// <summary>
         /// Gets or sets the warnings as errors.
         /// </summary>
         /// <value>The warnings as errors.</value>
@@ -122,6 +134,7 @@ namespace CSScriptLibrary
         public Evaluator()
         {
             ThrowOnError = true;
+            AutoResetEvaluatorOnError = true;
             Reset(true);
         }
 
@@ -247,6 +260,13 @@ namespace CSScriptLibrary
                 ReferenceDomainAssemblies();
         }
 
+        void SoftReset()
+        {
+            //Mono compiler (v4.0.0.0) has problem with compiling the code if the previous attempt has failed (e.g. code syntax error).
+            //Thus MCS.Evaluator cannot longer compile even the valid code and needs to be re-instantiated
+            service = new MCS.Evaluator(new CompilerContext(CompilerSettings, CompilingResult));
+        }
+
         static Assembly mscorelib = 333.GetType().Assembly; //actual runtime assembly
 #if net35
         /// <summary>
@@ -267,11 +287,11 @@ namespace CSScriptLibrary
         public Evaluator ReferenceDomainAssemblies(DomainAssemblies assemblies = DomainAssemblies.AllStaticNonGAC) //if GAC assemblies are loaded the duplicated object definitions are reported even if CompilerSettings.LoadDefaultReferences = false
 #endif
         {
-            //NOTE: It is important to avoid loading the runtime itself (mscorelib) as it 
+            //NOTE: It is important to avoid loading the runtime itself (mscorelib) as it
             //will break the code evaluation (compilation).
             //
             //On .NET mscorelib is filtered out by GlobalAssemblyCache check but
-            //on Mono it passes through so there is a need to do a specific check for mscorelib assembly. 
+            //on Mono it passes through so there is a need to do a specific check for mscorelib assembly.
             var relevantAssemblies = AppDomain.CurrentDomain.GetAssemblies();
 
             if (assemblies == DomainAssemblies.AllStatic)
@@ -280,7 +300,7 @@ namespace CSScriptLibrary
             }
             else if (assemblies == DomainAssemblies.AllStaticNonGAC)
             {
-                relevantAssemblies = relevantAssemblies.Where(x => !x.GlobalAssemblyCache && !CSSUtils.IsDynamic(x) &&  x != mscorelib).ToArray();
+                relevantAssemblies = relevantAssemblies.Where(x => !x.GlobalAssemblyCache && !CSSUtils.IsDynamic(x) && x != mscorelib).ToArray();
             }
             else if (assemblies == DomainAssemblies.None)
             {
@@ -443,7 +463,7 @@ namespace CSScriptLibrary
         /// <returns>Instance of the class defined in the script.</returns>
         public object LoadCode(string scriptText)
         {
-            //Starting with from Mono v3.3.0 Mono.CSharp.Evaluator does not 
+            //Starting with from Mono v3.3.0 Mono.CSharp.Evaluator does not
             //return compiled class reliably (as the first '*' type).
             //This is because Evaluator now injects "<InteractiveExpressionClass>" as the first class.
 
@@ -681,8 +701,14 @@ namespace CSScriptLibrary
             return ((Type)service.Evaluate(className)).Assembly;
         }
 
-        string GetConnectionPointClassDeclaration(int id) { return "\n public struct CSS_ConnectionPoint_"+id+" {}";}
-        string GetConnectionPointGetTypeExpression(int id) { return "typeof(CSS_ConnectionPoint_" + id + ");"; }
+        string GetConnectionPointClassDeclaration(int id)
+        {
+            return "\n public struct CSS_ConnectionPoint_" + id + " {}";
+        }
+        string GetConnectionPointGetTypeExpression(int id)
+        {
+            return "typeof(CSS_ConnectionPoint_" + id + ");";
+        }
 
         /// <summary>
         /// Gets a type from the last Compile/Evaluate/Load call.
@@ -693,7 +719,6 @@ namespace CSScriptLibrary
         {
             return (Type)service.Evaluate("typeof(" + type + ");");
         }
-
 
         static int AsnCounter = 0;
 
@@ -711,7 +736,7 @@ namespace CSScriptLibrary
                 int id = AsnCounter++;
                 var method = service.Compile(scriptText + GetConnectionPointClassDeclaration(id));
                 result = GetCompiledAssembly(id);
-                //cannot rely on 'method' as it is null in CS-Script scenarios 
+                //cannot rely on 'method' as it is null in CS-Script scenarios
             });
             return result;
         }
@@ -765,29 +790,37 @@ namespace CSScriptLibrary
 
             try
             {
-                action();
-            }
-            catch (Exception)
-            {
-                if (!CompilingResult.HasErrors)
+                try
                 {
-                    throw;
+                    action();
                 }
-                else
+                catch (Exception)
                 {
-                    //The exception is most likely related to te compilation error
-                    //so do noting. Alternatively (ay be in the future) we can add
-                    //it to the errors collection.
-                    //CompilingResult.Errors.Add(e.ToString());
+                    if (!CompilingResult.HasErrors)
+                    {
+                        throw;
+                    }
+                    else
+                    {
+                        //The exception is most likely related to the compilation error
+                        //so do noting. Alternatively (may be in the future) we can add
+                        //it to the errors collection.
+                        //CompilingResult.Errors.Add(e.ToString());
+                    }
                 }
-            }
 
-            if (ThrowOnError)
-            {
-                if (CompilingResult.HasErrors || (WarningsAsErrors && CompilingResult.HasWarnings))
+                if (ThrowOnError)
                 {
-                    throw CompilingResult.CreateException();
+                    if (CompilingResult.HasErrors || (WarningsAsErrors && CompilingResult.HasWarnings))
+                    {
+                        throw CompilingResult.CreateException();
+                    }
                 }
+            }
+            finally
+            {
+                if (CompilingResult.HasErrors && AutoResetEvaluatorOnError)
+                    SoftReset();
             }
         }
 
