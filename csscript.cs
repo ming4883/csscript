@@ -1651,8 +1651,12 @@ namespace csscript
 
             string infoFile = Path.Combine(newCacheDir, "css_info.txt");
 
-            using (StreamWriter sw = new StreamWriter(infoFile))
-                sw.Write(Environment.Version.ToString() + "\n" + Path.GetDirectoryName(Path.GetFullPath(scriptFile)) + "\n");
+            try
+            {
+                using (StreamWriter sw = new StreamWriter(infoFile))
+                    sw.Write(Environment.Version.ToString() + "\n" + Path.GetDirectoryName(Path.GetFullPath(scriptFile)) + "\n");
+            }
+            catch { } //there can be many reasons for the failure (e.g. file is already locked by another writer), which in most of the cases does not constitute the error but rather a runtime condition 
 
             cacheDir = newCacheDir;
         }
