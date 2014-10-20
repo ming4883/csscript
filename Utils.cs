@@ -956,7 +956,7 @@ namespace csscript
 
             if (ExecuteOptions.options.customHashing)
             {
-                //deterministic GetHashCode; useful for integration with thidr party products (e.g. CS-Script.Npp)
+                //deterministic GetHashCode; useful for integration with third party products (e.g. CS-Script.Npp)
                 return GetHashCode32(s);
             }
             else

@@ -563,7 +563,7 @@ namespace CSScriptLibrary
         }
 
         /// <summary>
-        /// Specialised version of GetMethodInvoker which returns MethodDelegate of the very first method found in the
+        /// Specialized version of GetMethodInvoker which returns MethodDelegate of the very first method found in the
         /// underlying assembly. This method is an overloaded implementation of the GetStaticMethod(string methodName, params object[] list).
         /// <para>
         /// Use this method when script assembly contains only one single type with one method.
@@ -637,6 +637,7 @@ namespace CSScriptLibrary
 
             AsmRemoteBrowser asmBrowser = (AsmRemoteBrowser)remoteAppDomain.CreateInstanceFromAndUnwrap(Assembly.GetExecutingAssembly().Location, typeof(AsmRemoteBrowser).ToString());
             asmBrowser.AsmFile = asmFile;
+            asmBrowser.CustomHashing = ExecuteOptions.options.customHashing;
             this.asmBrowser = (IAsmBrowser)asmBrowser;
 
             InitProbingDirs();
@@ -669,6 +670,46 @@ namespace CSScriptLibrary
             if (this.disposed)
                 throw new ObjectDisposedException(this.ToString());
             return asmBrowser.Invoke(obj, methodName, list);
+        }
+
+        /// <summary>
+        /// Gets the information about the object members.
+        /// <p>This is an extremely light way of getting Reflection information of a given object. Object can be either local one
+        /// or a TransparentProxy of the object instantiated in a remote AppDomain.</p>
+        /// <remarks>Note: Because none of the MemberInfo derivatives is serializable. This makes it impossible to use Reflection
+        /// for discovering the type members instantiated in the different AppDomains. And the TransparentProxies do not provide any marshaled
+        /// Reflection API neither.
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// using (var helper = new AsmHelper(CSScript.CompileCode(code), null, true))
+        /// {
+        ///     var script = helper.CreateObject("Script"); //script code has 'class Script' declared
+        ///     foreach (string info in helper.GetMembersOf(script))
+        ///         Debug.WriteLine(info);
+        /// }
+        /// </code>
+        /// </example>
+        /// </summary>
+        /// <param name="obj">The object.</param>
+        /// <returns>Collection of strings with each item representing human readable information about the Type member.
+        /// <para>
+        /// <c>Type implementation:</c><code>
+        /// class Script
+        /// {
+        ///     public void SayHello(string gritting)
+        ///     {
+        ///         ...
+        /// </code>
+        /// </para>
+        /// <para>
+        /// <para><c>Type member information:</c> </para>
+        /// "MemberType:Method;Name:SayHello;DeclaringType:Script;Signature:Void SayHello(System.String)"
+        /// </para>
+        /// </returns>
+        public string[] GetMembersOf(object obj)
+        {
+            return asmBrowser.GetMembersOf(obj);
         }
 
         /// <summary>
@@ -831,6 +872,8 @@ namespace CSScriptLibrary
         FastInvokeDelegate GetMethodInvoker(string methodName, Type[] list);
 
         FastInvokeDelegate GetMethodInvoker(string methodName);
+
+        string[] GetMembersOf(object obj);
     }
 
     internal class AsmRemoteBrowser : MarshalByRefObject, IAsmBrowser
@@ -861,6 +904,21 @@ namespace CSScriptLibrary
                 asmBrowser.Dispose();
 
             AppDomain.CurrentDomain.AssemblyResolve -= new ResolveEventHandler(ResolveEventHandler);
+        }
+
+        bool customHashing;
+
+        public bool CustomHashing
+        {
+            get { return customHashing; }
+            set
+            {
+                customHashing = value;
+                if (ExecuteOptions.options == null)
+                    ExecuteOptions.options = new ExecuteOptions();
+
+                ExecuteOptions.options.customHashing = value;
+            }
         }
 
         string asmFile;
@@ -983,12 +1041,43 @@ namespace CSScriptLibrary
 
             return retval;
         }
-
 #endif
+
+        public string[] GetMembersOf(object obj)
+        {
+            return Reflector.GetMembersOf(obj);
+        }
+    }
+
+    internal class Reflector
+    {
+        public static string[] GetMembersOf(object obj)
+        {
+#if net1
+            ArrayList retval = new ArrayList();
+#else
+            List<string> retval = new List<string>();
+#endif
+
+            foreach (MemberInfo info in obj.GetType().GetMembers())
+                retval.Add(string.Format("MemberType:{0};Name:{1};DeclaringType:{2};Signature:{3}",
+                                    info.MemberType, info.Name, info.DeclaringType.FullName, info.ToString()));
+
+#if net1
+            return (string[])retval.ToArray(typeof(string));
+#else
+            return retval.ToArray();
+#endif
+        }
     }
 
     internal class AsmBrowser : IAsmBrowser
     {
+        public string[] GetMembersOf(object obj)
+        {
+            return Reflector.GetMembersOf(obj);
+        }
+
         private string workingDir;
 #if net1
         private Hashtable methodCache = new Hashtable(); //cached delegates of the type methods
@@ -1028,6 +1117,13 @@ namespace CSScriptLibrary
         }
 
         string[] probingDirs = new string[] { };
+
+        bool customHash = true;
+        public bool CustomHash
+        {
+            get { return customHash; }
+            set { customHash = value; }
+        }
 
         public bool CachingEnabled
         {
