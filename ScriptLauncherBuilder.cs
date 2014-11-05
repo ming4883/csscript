@@ -153,6 +153,7 @@ class Script
     ${APPARTMENT}
     static public int Main(string[] args)
     {
+        try { Console.OutputEncoding = System.Text.Encoding.UTF8; } catch {}
         try
         {
             AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(CurrentDomain_AssemblyResolve);

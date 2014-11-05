@@ -469,7 +469,7 @@ namespace CSScriptLibrary
         public System.Threading.ApartmentState apartmentState = System.Threading.ApartmentState.Unknown;
 
         /// <summary>
-        /// Collection of the files to be compiled (including dependant scripts)
+        /// Collection of the files to be compiled (including dependent scripts)
         /// </summary>
         public string[] FilesToCompile
         {

@@ -883,7 +883,7 @@
         </member>
         <member name="P:CSScriptLibrary.ScriptParser.FilesToCompile">
             <summary>
-            Collection of the files to be compiled (including dependant scripts)
+            Collection of the files to be compiled (including dependent scripts)
             </summary>
         </member>
         <member name="P:CSScriptLibrary.ScriptParser.ImportedFiles">

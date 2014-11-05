@@ -49,6 +49,7 @@ using System.Collections.Generic;
 
 #endif
 
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Text;
 
@@ -99,7 +100,7 @@ namespace csscript
                         throw new ApplicationException("Cannot parse statement (" + statement + ").");
 
                     string clearArg;
-                    foreach (string arg in statement.Substring(lBracket + 1, rBracket - lBracket - 1).Split(",".ToCharArray()))
+                    foreach (string arg in SplitByDelimiter(statement.Substring(lBracket + 1, rBracket - lBracket - 1), ','))
                     {
                         clearArg = arg.Trim();
                         if (clearArg != string.Empty)
@@ -154,8 +155,11 @@ namespace csscript
 #else
                 List<string[]> renameingMap = new List<string[]>();
 #endif
-                statement = statement.Replace("($this.name)", Path.GetFileNameWithoutExtension(parentScript));
-                string[] parts = statement.Replace("\t", "").Trim().Replace(")", "").Split("(,".ToCharArray());
+                string statementTpParse = statement.Replace("($this.name)", Path.GetFileNameWithoutExtension(parentScript));
+                statementTpParse = statementTpParse.Replace("\t", "").Trim();
+
+                //string[] parts = CSharpParser.SplitByDelimiter(statementTpParse, DirectiveDelimiters);
+                string[] parts = CSharpParser.SplitByDelimiter(statementTpParse, '(', ',');
 
                 this.file = parts[0];
 
@@ -209,6 +213,12 @@ namespace csscript
 #endif
 
         #region Public interface
+#if DEBUG
+        public CSharpParser()
+        {
+        }
+
+#endif
 
         /// <summary>
         /// Creates an instance of CSharpParser.
@@ -296,7 +306,7 @@ namespace csscript
             //analyse script arguments
             foreach (string statement in GetRawStatements("//css_args", endCodePos))
             {
-                foreach (string arg in statement.Split(','))
+                foreach (string arg in SplitByDelimiter(statement, ','))
                 {
                     string newArg = arg.Trim();
                     if (newArg.StartsWith("\""))
@@ -366,7 +376,7 @@ namespace csscript
                 searchDirs.AddRange(CSSUtils.GetDirectories(workingDir, Environment.ExpandEnvironmentVariables(statement).Trim()));
 
             //analyse namespace references
-            foreach (string statement in GetRawStatements("using", endCodePos, true))
+            foreach (string statement in GetRawStatements(code, "using", endCodePos, true))
                 if (!statement.StartsWith("(")) //just to cut off "using statements" as we are interested in "using directives" only
                     refNamespaces.Add(statement.Trim().Replace("\t", "").Replace("\r", "").Replace("\n", "").Replace(" ", ""));
 
@@ -775,10 +785,10 @@ namespace csscript
 
         string[] GetRawStatements(string pattern, int endIndex)
         {
-            return GetRawStatements(pattern, endIndex, false);
+            return GetRawStatements(this.code, pattern, endIndex, false);
         }
 
-        string[] GetRawStatements(string pattern, int endIndex, bool ignoreComments)
+        string[] GetRawStatements(string codeToAnalyse, string pattern, int endIndex, bool ignoreComments)
         {
 #if net1
             ArrayList retval = new ArrayList();
@@ -786,7 +796,7 @@ namespace csscript
             List<string> retval = new List<string>();
 #endif
 
-            int pos = code.IndexOf(pattern);
+            int pos = codeToAnalyse.IndexOf(pattern);
             int endPos = -1;
             while (pos != -1 && pos <= endIndex)
             {
@@ -797,21 +807,15 @@ namespace csscript
                         pos += pattern.Length;
 
                         if (OpenEndDirectiveSyntax)
-                        {
-                            int endOfLine = code.IndexOf("\n", pos); //EOL
-                            if (endOfLine != -1)
-                                endPos = Math.Min(code.IndexOf(";", pos), endOfLine);
-                            else
-                                endPos = code.IndexOf(";", pos);
-                        }
+                            endPos = IndexOfDelimiter(pos, codeToAnalyse.Length - 1, '\n', ';');
                         else
-                            endPos = code.IndexOf(";", pos);
+                            endPos = IndexOfDelimiter(pos, codeToAnalyse.Length - 1, ';');
 
                         if (endPos != -1)
-                            retval.Add(code.Substring(pos, endPos - pos).Trim());
+                            retval.Add(codeToAnalyse.Substring(pos, endPos - pos).Trim());
                     }
                 }
-                pos = code.IndexOf(pattern, pos + 1);
+                pos = codeToAnalyse.IndexOf(pattern, pos + 1);
             }
 #if net1
             return (string[])retval.ToArray(typeof(string));
@@ -853,6 +857,94 @@ namespace csscript
             }
             return -1;
         }
+        internal static bool IsDelimiter(char c, char[] delimiters)
+        {
+            foreach (char delimiter in delimiters)
+            {
+                if (c == delimiter)
+                    return true;
+            }
+            return false;
+        }
+
+        internal static string[] SplitByDelimiter(string text, params char[] delimiters)
+        {
+            StringBuilder builder = new StringBuilder();
+#if net1
+            ArrayList retval = new ArrayList();
+#else
+            List<string> retval = new List<string>();
+#endif
+            char lastDelimiter = char.MinValue;
+
+            foreach (char c in text)
+            {
+                if (lastDelimiter != char.MinValue)
+                {
+                    if (c != lastDelimiter)
+                    {
+                        string entry = builder.ToString();
+                        if (entry != null && entry.Trim() != "")
+                            retval.Add(entry.Trim());
+
+                        builder.Length = 0;
+
+                        if (IsDelimiter(c, delimiters))
+                            lastDelimiter = c;
+                        else
+                            lastDelimiter = char.MinValue;
+                    }
+                    else
+                    {
+                        lastDelimiter = char.MinValue;
+                    }
+                }
+                else
+                {
+                    if (IsDelimiter(c, delimiters))
+                        lastDelimiter = c;
+                }
+
+                if (lastDelimiter == char.MinValue)
+                    builder.Append(c);
+            }
+
+            if (builder.Length > 0)
+                retval.Add(builder.ToString());
+
+#if net1
+            return (string[])retval.ToArray(typeof(string));
+#else
+            return retval.ToArray();
+#endif
+        }
+
+        int IndexOfDelimiter(int startIndex, int endIndex, params char[] delimiters)
+        {
+            char lastDelimiter = char.MinValue;
+
+            for (int i = startIndex; i <= endIndex; i++)
+            {
+                char c = code[i];
+                if (lastDelimiter != char.MinValue)
+                {
+                    if (lastDelimiter == c) //delimiter was escaped
+                        lastDelimiter = char.MinValue;
+                    else
+                        return i - 1;
+                }
+                else
+                {
+                    foreach (char delimiter in delimiters)
+                        if (code[i] == delimiter)
+                        {
+                            lastDelimiter = delimiter;
+                            break;
+                        }
+                }
+            }
+            return -1;
+        }
 
         bool IsComment(int charPos)
         {
@@ -878,7 +970,54 @@ namespace csscript
             return false;
         }
 
+
         bool IsToken(int startPos, int length)
+        {
+            if (code.Length < startPos + length) //the rest of the text is too short
+                return false;
+
+            if (startPos != 0 && !char.IsWhiteSpace(code[startPos - 1])) //position is not at the start of the token
+                return false;
+
+            if (code.Length > startPos + length && !char.IsWhiteSpace(code[startPos + length])) //position is not at the end of the token
+                return false;
+
+            int endPos = startPos + length;
+
+            char lastDelimiter = char.MinValue;
+
+            for (int i = startPos; i <= endPos; i++)
+            {
+                char c = code[i];
+                if (lastDelimiter != char.MinValue)
+                {
+                    if (lastDelimiter == c) //delimiter was escaped
+                        lastDelimiter = char.MinValue;
+                    else
+                        return false;
+                }
+                else
+                {
+                    if (IsDelimiter(c, DirectiveDelimiters))
+                    {
+                        lastDelimiter = c;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        public static string EscapeDirectiveDelimiters(string text)
+        {
+            foreach (char c in DirectiveDelimiters)
+                text = text.Replace(c.ToString(), c.ToString() + c); //very unoptimized but it is intended only for troubleshooting.
+            return text;
+        }
+
+        public static char[] DirectiveDelimiters = new char[] { ';', '(', ')', '{', '}', ',' };
+
+        bool IsTokenOld(int startPos, int length)
         {
             if (code.Length < startPos + length)
                 return false;
