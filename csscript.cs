@@ -61,7 +61,6 @@ using System.CodeDom.Compiler;
 using System.Globalization;
 using System.Diagnostics;
 using Microsoft.CSharp;
-
 namespace csscript
 {
     internal class Profiler
@@ -629,6 +628,12 @@ namespace csscript
         /// </summary>
         public Exception lastException;
 
+        class Win32
+        {
+            [DllImport("kernel32.dll", SetLastError = true)]
+            public static extern UInt32 WaitForSingleObject(IntPtr hHandle, UInt32 dwMilliseconds);
+        }
+
         /// <summary>
         /// This method implements compiling and execution of the script.
         /// </summary>
@@ -636,6 +641,8 @@ namespace csscript
         {
             try
             {
+                //ComInit com = new ComInit();
+
                 //System.Diagnostics.Debug.Assert(false);
                 if (options.processFile)
                 {
@@ -668,16 +675,31 @@ namespace csscript
                     bool fileUnlocked = false;
                     //Infinite timeout is not good choice here as it may block forever but continuing while the file is still locked will
                     //throw a nice informative exception.
-                    using (Mutex fileLock = new Mutex(false, "Process." + CSSUtils.GetHashCodeEx(options.scriptFileName).ToString()))
+
+                    string mutexName = "Process." + CSSUtils.GetHashCodeEx(options.scriptFileName).ToString();
+
+                    using (Mutex fileLock = new Mutex(false, mutexName))
                         try
                         {
-                            int start = Environment.TickCount;
-
                             //infinite is not good here as it may block forever but continuing while the file is still locked will
                             //throw a nice informative exception
-                            fileLock.WaitOne(3000, false); //let other thread/process (if any) to finish loading/compiling the same file; 3 seconds should be enough, if you need more use more sophisticated synchronization
 
+                            if (Utils.IsLinux())
+                            {
+                                fileLock.WaitOne(3000, false); //let other thread/process (if any) to finish loading/compiling the same file; 3 seconds should be enough, if you need more use more sophisticated synchronization
+                            }
+                            else
+                            {
+                                try
+                                {
+                                    Win32.WaitForSingleObject((IntPtr)fileLock.SafeWaitHandle.DangerousGetHandle(), 3000);
+                                }
+                                catch { }
+                                //ComInit com = new ComInit(); //future feature
+                            }
+                            //Thread.Sleep(3000);
                             //Trace.WriteLine(">>>  Waited  " + (Environment.TickCount - start));
+
 
                             //compile
                             string assemblyFileName = options.useCompiled ? GetAvailableAssembly(options.scriptFileName) : null;
@@ -698,6 +720,7 @@ namespace csscript
                                 Utils.FileDelete(assemblyFileName, true);
                                 assemblyFileName = null;
                             }
+
 
                             //add searchDirs to PATH to support search path for native dlls
                             //need to do this before compilation or execution
@@ -1300,7 +1323,7 @@ namespace csscript
 
             if (options.DBG)
                 Utils.AddCompilerOptions(compilerParams, "/d:DEBUG /d:TRACE");
-            
+
             compilerParams.IncludeDebugInformation = options.DBG;
             compilerParams.GenerateExecutable = generateExe;
             compilerParams.GenerateInMemory = false;
