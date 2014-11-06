@@ -111,7 +111,7 @@ namespace csscript
 #else
                     args = argList.ToArray();
 #endif
-                    if (statement.Substring(rBracket + 1).Trim() == "ignore")
+                    if (statement.Substring(rBracket + 1).Trim().Replace(",", "") == "ignore")
                         abortOnError = false;
                 }
                 else
@@ -155,11 +155,10 @@ namespace csscript
 #else
                 List<string[]> renameingMap = new List<string[]>();
 #endif
-                string statementTpParse = statement.Replace("($this.name)", Path.GetFileNameWithoutExtension(parentScript));
-                statementTpParse = statementTpParse.Replace("\t", "").Trim();
+                string statementToParse = statement.Replace("($this.name)", Path.GetFileNameWithoutExtension(parentScript));
+                statementToParse = statementToParse.Replace("\t", "").Trim();
 
-                //string[] parts = CSharpParser.SplitByDelimiter(statementTpParse, DirectiveDelimiters);
-                string[] parts = CSharpParser.SplitByDelimiter(statementTpParse, '(', ',');
+                string[] parts = CSharpParser.SplitByDelimiter(statementToParse, DirectiveDelimiters);
 
                 this.file = parts[0];
 
@@ -339,23 +338,23 @@ namespace csscript
 
             //analyse assembly references
             foreach (string statement in GetRawStatements("//css_reference", endCodePos))
-                refAssemblies.Add(Environment.ExpandEnvironmentVariables(statement).Trim());
+                refAssemblies.Add(Environment.ExpandEnvironmentVariables(UnescapeDirectiveDelimiters(statement)).Trim());
             foreach (string statement in GetRawStatements("//css_ref", endCodePos))
-                refAssemblies.Add(Environment.ExpandEnvironmentVariables(statement).Trim());
+                refAssemblies.Add(Environment.ExpandEnvironmentVariables(UnescapeDirectiveDelimiters(statement)).Trim());
 
             //analyse precompilers
             foreach (string statement in GetRawStatements("//css_precompiler", endCodePos))
-                precompilers.Add(Environment.ExpandEnvironmentVariables(statement).Trim());
+                precompilers.Add(Environment.ExpandEnvironmentVariables(UnescapeDirectiveDelimiters(statement)).Trim());
 
             foreach (string statement in GetRawStatements("//css_pc", endCodePos))
-                precompilers.Add(Environment.ExpandEnvironmentVariables(statement).Trim());
+                precompilers.Add(Environment.ExpandEnvironmentVariables(UnescapeDirectiveDelimiters(statement)).Trim());
 
             //analyse compiler options
             foreach (string statement in GetRawStatements("//css_co", endCodePos))
-                compilerOptions.Add(Environment.ExpandEnvironmentVariables(statement).Trim());
+                compilerOptions.Add(Environment.ExpandEnvironmentVariables(UnescapeDirectiveDelimiters(statement)).Trim());
 
             foreach (string statement in GetRawStatements("//css_host", endCodePos))
-                hostOptions.Add(Environment.ExpandEnvironmentVariables(statement).Trim());
+                hostOptions.Add(Environment.ExpandEnvironmentVariables(UnescapeDirectiveDelimiters(statement)).Trim());
 
             //analyse assembly references
             foreach (string statement in GetRawStatements("//css_ignore_namespace", endCodePos))
@@ -365,15 +364,15 @@ namespace csscript
 
             //analyse resource references
             foreach (string statement in GetRawStatements("//css_resource", endCodePos))
-                resFiles.Add(statement.Trim());
+                resFiles.Add(UnescapeDirectiveDelimiters(statement).Trim());
             foreach (string statement in GetRawStatements("//css_res", endCodePos))
-                resFiles.Add(statement.Trim());
+                resFiles.Add(UnescapeDirectiveDelimiters(statement).Trim());
 
             //analyse resource references
             foreach (string statement in GetRawStatements("//css_searchdir", endCodePos))
-                searchDirs.AddRange(CSSUtils.GetDirectories(workingDir, Environment.ExpandEnvironmentVariables(statement).Trim()));
+                searchDirs.AddRange(CSSUtils.GetDirectories(workingDir, Environment.ExpandEnvironmentVariables(UnescapeDirectiveDelimiters(statement)).Trim()));
             foreach (string statement in GetRawStatements("//css_dir", endCodePos))
-                searchDirs.AddRange(CSSUtils.GetDirectories(workingDir, Environment.ExpandEnvironmentVariables(statement).Trim()));
+                searchDirs.AddRange(CSSUtils.GetDirectories(workingDir, Environment.ExpandEnvironmentVariables(UnescapeDirectiveDelimiters(statement)).Trim()));
 
             //analyse namespace references
             foreach (string statement in GetRawStatements(code, "using", endCodePos, true))
@@ -800,7 +799,7 @@ namespace csscript
             int endPos = -1;
             while (pos != -1 && pos <= endIndex)
             {
-                if (IsToken(pos, pattern.Length))
+                if (IsDirectiveToken(pos, pattern.Length))
                 {
                     if (!ignoreComments || (ignoreComments && !IsComment(pos)))
                     {
@@ -857,9 +856,10 @@ namespace csscript
             }
             return -1;
         }
-        internal static bool IsDelimiter(char c, char[] delimiters)
+
+        internal static bool IsOneOf(char c, char[] items)
         {
-            foreach (char delimiter in delimiters)
+            foreach (char delimiter in items)
             {
                 if (c == delimiter)
                     return true;
@@ -889,7 +889,7 @@ namespace csscript
 
                         builder.Length = 0;
 
-                        if (IsDelimiter(c, delimiters))
+                        if (IsOneOf(c, delimiters))
                             lastDelimiter = c;
                         else
                             lastDelimiter = char.MinValue;
@@ -901,7 +901,7 @@ namespace csscript
                 }
                 else
                 {
-                    if (IsDelimiter(c, delimiters))
+                    if (IsOneOf(c, delimiters))
                         lastDelimiter = c;
                 }
 
@@ -970,8 +970,41 @@ namespace csscript
             return false;
         }
 
+        //bool IsTokenOld(int startPos, int length)
+        //{
+        //    if (code.Length < startPos + length)
+        //        return false;
+
+        //    int probeStart = (startPos != 0) ? startPos - 1 : 0;
+        //    int endPos = (code.Length == startPos + length) ? startPos + length : startPos + length + 1;
+
+        //    string original = code.Substring(startPos, length);
+        //    string probeStr = code.Substring(probeStart, endPos - probeStart);
+
+        //    probeStr = probeStr.Replace(";", "").Replace("(", "").Replace(")", "").Replace("{", "");
+        //    probeStr = probeStr.Trim();
+
+        //    return probeStr.Length == original.Length;
+        //}
+
+        static char[] codeDelimiters = new char[] { ';', '(', ')', '{', };
 
         bool IsToken(int startPos, int length)
+        {
+            if (code.Length < startPos + length) //the rest of the text is too short
+                return false;
+
+            if (startPos != 0 && !(char.IsWhiteSpace(code[startPos - 1]) || IsOneOf(code[startPos - 1], codeDelimiters))) //position is not at the start of the token
+                return false;
+
+            if (code.Length > startPos + length && !(char.IsWhiteSpace(code[startPos + length]) || IsOneOf(code[startPos + length], codeDelimiters))) //position is not at the end of the token
+                return false;
+
+
+            return true;
+        }
+
+        bool IsDirectiveToken(int startPos, int length)
         {
             if (code.Length < startPos + length) //the rest of the text is too short
                 return false;
@@ -979,6 +1012,7 @@ namespace csscript
             if (startPos != 0 && !char.IsWhiteSpace(code[startPos - 1])) //position is not at the start of the token
                 return false;
 
+            //if (code.Length > startPos + length && !(char.IsWhiteSpace(code[startPos + length]) || IsDelimiter(code[startPos + length], DirectiveDelimiters))) //position is not at the end of the token
             if (code.Length > startPos + length && !char.IsWhiteSpace(code[startPos + length])) //position is not at the end of the token
                 return false;
 
@@ -998,7 +1032,7 @@ namespace csscript
                 }
                 else
                 {
-                    if (IsDelimiter(c, DirectiveDelimiters))
+                    if (IsOneOf(c, DirectiveDelimiters))
                     {
                         lastDelimiter = c;
                     }
@@ -1008,13 +1042,51 @@ namespace csscript
             return true;
         }
 
+        /// <summary>
+        /// Escapes the CS-Script directive (e.g. //css_*) delimiters.
+        /// <para>All //css_* directives should escape any internal CS-Script delimiters by doubling the delimiter character. 
+        /// For example //css_include for 'script(today).cs' should escape brackets as they are the directive delimiters. 
+        /// The correct syntax would be as follows '//css_include script((today)).cs;'</para>
+        /// <remarks>The delimiters characters are ';,(){}'.
+        /// <para>However you should check <see cref="T:csscript.CSharpParser.DirectiveDelimiters"/> for the accurate list of all delimiters.
+        /// </para> 
+        /// </remarks>
+        /// </summary>
+        /// <param name="text">The text to be processed.</param>
+        /// <returns></returns>
         public static string EscapeDirectiveDelimiters(string text)
         {
             foreach (char c in DirectiveDelimiters)
-                text = text.Replace(c.ToString(), c.ToString() + c); //very unoptimized but it is intended only for troubleshooting.
+                text = text.Replace(c.ToString(), new string(c, 2)); //very unoptimized but it is intended only for troubleshooting.
             return text;
         }
 
+        /// <summary>
+        /// Unescapes the CS-Script directive (e.g. //css_*) delimiters.
+        /// <para>All //css_* directives should escape any internal CS-Script delimiters by doubling the delimiter character. 
+        /// For example //css_include for 'script(today).cs' should escape brackets as they are the directive delimiters. 
+        /// The correct syntax would be as follows '//css_include script((today)).cs;'</para>
+        /// <remarks>The delimiters characters are ';,(){}'.
+        /// <para>However you should check <see cref="T:csscript.CSharpParser.DirectiveDelimiters"/> for the accurate list of all delimiters.
+        /// </para> 
+        /// </remarks>
+        /// </summary>
+        /// <param name="text">The text to be processed.</param>
+        /// <returns></returns>
+        public static string UnescapeDirectiveDelimiters(string text)
+        {
+            foreach (char c in DirectiveDelimiters)
+                text = text.Replace(new string (c, 2), c.ToString()); //very unoptimized but it is intended only for troubleshooting.
+            return text;
+        }
+
+        /// <summary>
+        /// The //css_* directive delimiters. 
+        /// <remarks>All //css_* directives should escape any internal CS-Script delimiters by doubling the delimiter character. 
+        /// For example //css_include for 'script(today).cs' should escape brackets as they are the directive delimiters. 
+        /// The correct syntax would be as follows '//css_include script((today)).cs;'
+        /// </remarks>
+        /// </summary>
         public static char[] DirectiveDelimiters = new char[] { ';', '(', ')', '{', '}', ',' };
 
         bool IsTokenOld(int startPos, int length)

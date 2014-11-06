@@ -1646,80 +1646,80 @@ namespace csscript
         }
     }
 
-    internal class ComInit
-    {
-        public enum RpcAuthnLevel
-        {
-            Default = 0,
-            None,
-            Connect,
-            Call,
-            Pkt,
-            PktIntegrity,
-            PktPrivacy
-        }
+    //internal class ComInit
+    //{
+    //    public enum RpcAuthnLevel
+    //    {
+    //        Default = 0,
+    //        None,
+    //        Connect,
+    //        Call,
+    //        Pkt,
+    //        PktIntegrity,
+    //        PktPrivacy
+    //    }
 
-        public enum RpcImpLevel
-        {
-            Default = 0,
-            Anonymous,
-            Identify,
-            Impersonate,
-            Delegate
-        }
+    //    public enum RpcImpLevel
+    //    {
+    //        Default = 0,
+    //        Anonymous,
+    //        Identify,
+    //        Impersonate,
+    //        Delegate
+    //    }
 
-        public enum EoAuthnCap
-        {
-            None = 0x00,
-            MutualAuth = 0x01,
-            StaticCloaking = 0x20,
-            DynamicCloaking = 0x40,
-            AnyAuthority = 0x80,
-            MakeFullSIC = 0x100,
-            Default = 0x800,
-            SecureRefs = 0x02,
-            AccessControl = 0x04,
-            AppID = 0x08,
-            Dynamic = 0x10,
-            RequireFullSIC = 0x200,
-            AutoImpersonate = 0x400,
-            NoCustomMarshal = 0x2000,
-            DisableAAA = 0x1000
-        }
+    //    public enum EoAuthnCap
+    //    {
+    //        None = 0x00,
+    //        MutualAuth = 0x01,
+    //        StaticCloaking = 0x20,
+    //        DynamicCloaking = 0x40,
+    //        AnyAuthority = 0x80,
+    //        MakeFullSIC = 0x100,
+    //        Default = 0x800,
+    //        SecureRefs = 0x02,
+    //        AccessControl = 0x04,
+    //        AppID = 0x08,
+    //        Dynamic = 0x10,
+    //        RequireFullSIC = 0x200,
+    //        AutoImpersonate = 0x400,
+    //        NoCustomMarshal = 0x2000,
+    //        DisableAAA = 0x1000
+    //    }
 
-        [DllImport("ole32.dll")]
-        public static extern int CoInitializeSecurity(IntPtr pVoid,
-                                                           int cAuthSvc,
-                                                           IntPtr asAuthSvc,
-                                                           IntPtr pReserved1,
-                                                           RpcAuthnLevel level,
-                                                           RpcImpLevel impers,
-                                                           IntPtr pAuthList,
-                                                           EoAuthnCap capabilities,
-                                                           IntPtr pReserved3);
+    //    [DllImport("ole32.dll")]
+    //    public static extern int CoInitializeSecurity(IntPtr pVoid,
+    //                                                       int cAuthSvc,
+    //                                                       IntPtr asAuthSvc,
+    //                                                       IntPtr pReserved1,
+    //                                                       RpcAuthnLevel level,
+    //                                                       RpcImpLevel impers,
+    //                                                       IntPtr pAuthList,
+    //                                                       EoAuthnCap capabilities,
+    //                                                       IntPtr pReserved3);
 
-        public ComInit()
-            : this(EoAuthnCap.DynamicCloaking)
-        {
-        }
+    //    public ComInit()
+    //        : this(EoAuthnCap.DynamicCloaking)
+    //    {
+    //    }
 
-        public ComInit(EoAuthnCap capabilities)
-        {
-            int hr = CoInitializeSecurity(
-                                    IntPtr.Zero,
-                                    -1,
-                                    IntPtr.Zero,
-                                    IntPtr.Zero,
-                                    RpcAuthnLevel.Default,
-                                    RpcImpLevel.Impersonate,
-                                    IntPtr.Zero,
-                                    capabilities,
-                                    IntPtr.Zero);
-            if (hr != 0)
-            {
-                throw new ApplicationException("CoInitializeSecurity failed. [" + hr.ToString("0x8") + "]");
-            }
-        }
-    }
+    //    public ComInit(EoAuthnCap capabilities)
+    //    {
+    //        int hr = CoInitializeSecurity(
+    //                                IntPtr.Zero,
+    //                                -1,
+    //                                IntPtr.Zero,
+    //                                IntPtr.Zero,
+    //                                RpcAuthnLevel.Default,
+    //                                RpcImpLevel.Impersonate,
+    //                                IntPtr.Zero,
+    //                                capabilities,
+    //                                IntPtr.Zero);
+    //        if (hr != 0)
+    //        {
+    //            throw new ApplicationException("CoInitializeSecurity failed. [" + hr.ToString("0x8") + "]");
+    //        }
+    //    }
+    //}
 
 }

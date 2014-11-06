@@ -631,7 +631,30 @@ namespace csscript
         class Win32
         {
             [DllImport("kernel32.dll", SetLastError = true)]
-            public static extern UInt32 WaitForSingleObject(IntPtr hHandle, UInt32 dwMilliseconds);
+            public static extern UInt32 WaitForSingleObject(IntPtr hHandle, Int32 dwMilliseconds);
+        }
+
+        void WaitForMutex(Mutex mutex, int delay)
+        {
+            bool useCLROnly = true;
+            if (useCLROnly || Utils.IsLinux())
+            {
+                mutex.WaitOne(delay, false); //let other thread/process (if any) to finish loading/compiling the same file; 3 seconds should be enough, if you need more use more sophisticated synchronization
+            }
+            else
+            {
+                try
+                {
+                    //As opposite to mutex.WaitOne WaitForSingleObject does not trigger initialization of the COM security (CoInitializeSecurity)
+#if net1
+                    Win32.WaitForSingleObject(mutex.Handle, delay);
+#else
+                    Win32.WaitForSingleObject(mutex.SafeWaitHandle.DangerousGetHandle(), delay);
+#endif
+                }
+                catch { }
+                //call script's ComInit //future feature
+            }
         }
 
         /// <summary>
@@ -641,8 +664,6 @@ namespace csscript
         {
             try
             {
-                //ComInit com = new ComInit();
-
                 //System.Diagnostics.Debug.Assert(false);
                 if (options.processFile)
                 {
@@ -684,19 +705,8 @@ namespace csscript
                             //infinite is not good here as it may block forever but continuing while the file is still locked will
                             //throw a nice informative exception
 
-                            if (Utils.IsLinux())
-                            {
-                                fileLock.WaitOne(3000, false); //let other thread/process (if any) to finish loading/compiling the same file; 3 seconds should be enough, if you need more use more sophisticated synchronization
-                            }
-                            else
-                            {
-                                try
-                                {
-                                    Win32.WaitForSingleObject((IntPtr)fileLock.SafeWaitHandle.DangerousGetHandle(), 3000);
-                                }
-                                catch { }
-                                //ComInit com = new ComInit(); //future feature
-                            }
+                            WaitForMutex(fileLock, 3000); //let other thread/process (if any) to finish loading/compiling the same file; 3 seconds should be enough, if you need more use more sophisticated synchronization
+
                             //Thread.Sleep(3000);
                             //Trace.WriteLine(">>>  Waited  " + (Environment.TickCount - start));
 
