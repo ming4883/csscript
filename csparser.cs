@@ -139,6 +139,18 @@ namespace csscript
         }
 
         /// <summary>
+        /// Class to hold the script initialization information.
+        /// </summary>
+        public class InitInfo
+        {
+            public bool CoInitializeSecurity = false;
+            public InitInfo(string statement)
+            {
+                CoInitializeSecurity = statement.StartsWith("CoInitializeSecurity");
+            }
+        }
+
+        /// <summary>
         /// Class to hold the script importing information, which actually controls how script is imported.
         /// </summary>
         public class ImportInfo
@@ -325,6 +337,10 @@ namespace csscript
                 cmdScripts.Add(new CmdScriptInfo(statement.Trim(), false, file));
             foreach (string statement in GetRawStatements("//css_postscript", endCodePos))
                 cmdScripts.Add(new CmdScriptInfo(statement.Trim(), false, file));
+
+            //analyse script initialization directives
+            foreach (string statement in GetRawStatements("//css_init", endCodePos))
+                inits.Add(new InitInfo(statement.Trim()));
 
             //analyse script imports/includes
             foreach (string statement in GetRawStatements("//css_import", endCodePos))
@@ -720,9 +736,21 @@ namespace csscript
             get { return cmdScripts.ToArray(); }
 #endif
         }
+       
+        /// <summary>
+        /// Script initialization directives.
+        /// </summary>
+        public InitInfo[] Inits
+        {
+#if net1
+            get { return (InitInfo[])inits.ToArray(typeof(InitInfo)); }
+#else
+            get { return inits.ToArray(); }
+#endif
+        }
 
         /// <summary>
-        /// Appartment state of the script.
+        /// Apartment state of the script.
         /// </summary>
         public ApartmentState ThreadingModel
         {
@@ -754,6 +782,7 @@ namespace csscript
         ArrayList compilerOptions = new ArrayList();
         ArrayList hostOptions = new ArrayList();
         ArrayList cmdScripts = new ArrayList();
+        ArrayList inits = new ArrayList();
         ArrayList refNamespaces = new ArrayList();
         ArrayList ignoreNamespaces = new ArrayList();
         ArrayList imports = new ArrayList();
@@ -766,6 +795,7 @@ namespace csscript
         List<string> compilerOptions = new List<string>();
         List<string> hostOptions = new List<string>();
         List<CmdScriptInfo> cmdScripts = new List<CmdScriptInfo>();
+        List<InitInfo> inits = new List<InitInfo>();
         List<string> refNamespaces = new List<string>();
         List<string> ignoreNamespaces = new List<string>();
         List<ImportInfo> imports = new List<ImportInfo>();

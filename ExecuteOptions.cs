@@ -114,6 +114,7 @@ namespace csscript
             clone.defaultRefAssemblies = this.defaultRefAssemblies;
             clone.hideTemp = this.hideTemp;
             clone.autoClass = this.autoClass;
+            clone.initContext = this.initContext;
             clone.customHashing = this.customHashing;
             clone.compilationContext = this.compilationContext;
             clone.useScriptConfig = this.useScriptConfig;
@@ -169,6 +170,7 @@ namespace csscript
             clone.customHashing = this.customHashing;
             clone.altConfig = this.altConfig;
             clone.hideTemp = this.hideTemp;
+            clone.initContext = this.initContext;
             clone.scriptFileNamePrimary = this.scriptFileNamePrimary;
             clone.doCleanupAfterNumberOfRuns = this.doCleanupAfterNumberOfRuns;
             clone.shareHostRefAssemblies = this.shareHostRefAssemblies;
@@ -181,6 +183,7 @@ namespace csscript
         public bool processFile = true;
         public int compilationContext = 0;
         public string scriptFileName = "";
+        public object initContext= null;
         public string scriptFileNamePrimary = null;
         public bool noLogo = false;
         public bool useCompiled = false;

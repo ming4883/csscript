@@ -278,6 +278,9 @@ namespace csscript
                     //do quick parsing for pre/post scripts, ThreadingModel and embedded script arguments
                     CSharpParser parser = new CSharpParser(options.scriptFileName, true);
 
+                    if (parser.Inits.Length != 0)
+                        options.initContext = parser.Inits[0];
+
                     if (parser.HostOptions.Length != 0)
                     {
                         if (Environment.Version.Major >= 4)
@@ -628,32 +631,32 @@ namespace csscript
         /// </summary>
         public Exception lastException;
 
-        class Win32
-        {
-            [DllImport("kernel32.dll", SetLastError = true)]
-            public static extern UInt32 WaitForSingleObject(IntPtr hHandle, Int32 dwMilliseconds);
-        }
+        [DllImport("ole32.dll")]
+        public static extern int CoInitializeSecurity(IntPtr pVoid,
+                                                      int cAuthSvc,
+                                                      IntPtr asAuthSvc,
+                                                      IntPtr pReserved1,
+                                                      int level,
+                                                      int impers,
+                                                      IntPtr pAuthList,
+                                                      int capabilities,
+                                                      IntPtr pReserved3);
 
-        void WaitForMutex(Mutex mutex, int delay)
+        static void ComInitSecurity()
         {
-            bool useCLROnly = true;
-            if (useCLROnly || Utils.IsLinux())
+            int hr = CoInitializeSecurity(
+                               IntPtr.Zero,
+                               -1,
+                               IntPtr.Zero,
+                               IntPtr.Zero,
+                               0, //RpcAuthnLevel.Default
+                               3, //RpcImpLevel.Impersonate,
+                               IntPtr.Zero,
+                               0x40, //EoAuthnCap.DynamicCloaking
+                               IntPtr.Zero);
+            if (hr != 0)
             {
-                mutex.WaitOne(delay, false); //let other thread/process (if any) to finish loading/compiling the same file; 3 seconds should be enough, if you need more use more sophisticated synchronization
-            }
-            else
-            {
-                try
-                {
-                    //As opposite to mutex.WaitOne WaitForSingleObject does not trigger initialization of the COM security (CoInitializeSecurity)
-#if net1
-                    Win32.WaitForSingleObject(mutex.Handle, delay);
-#else
-                    Win32.WaitForSingleObject(mutex.SafeWaitHandle.DangerousGetHandle(), delay);
-#endif
-                }
-                catch { }
-                //call script's ComInit //future feature
+            //    System.Windows.Forms.MessageBox.Show("!!!   CoInitializeSecurity failed. [" + hr.ToString("0x8") + "]");
             }
         }
 
@@ -667,6 +670,10 @@ namespace csscript
                 //System.Diagnostics.Debug.Assert(false);
                 if (options.processFile)
                 {
+                    CSharpParser.InitInfo initInfo = options.initContext as CSharpParser.InitInfo;
+                    if (initInfo != null && initInfo.CoInitializeSecurity)
+                            ComInitSecurity();
+
                     if (options.local)
                         Environment.CurrentDirectory = Path.GetDirectoryName(Path.GetFullPath(options.scriptFileName));
 
@@ -705,11 +712,10 @@ namespace csscript
                             //infinite is not good here as it may block forever but continuing while the file is still locked will
                             //throw a nice informative exception
 
-                            WaitForMutex(fileLock, 3000); //let other thread/process (if any) to finish loading/compiling the same file; 3 seconds should be enough, if you need more use more sophisticated synchronization
+                            fileLock.WaitOne(3000, false); //let other thread/process (if any) to finish loading/compiling the same file; 3 seconds should be enough, if you need more use more sophisticated synchronization
 
                             //Thread.Sleep(3000);
                             //Trace.WriteLine(">>>  Waited  " + (Environment.TickCount - start));
-
 
                             //compile
                             string assemblyFileName = options.useCompiled ? GetAvailableAssembly(options.scriptFileName) : null;
@@ -816,12 +822,15 @@ namespace csscript
                                         }
                                     }
 
+                                    
+
                                     if (options.useCompiled || options.cleanupShellCommand != "")
                                     {
                                         AssemblyResolver.CacheProbingResults = true; //it is reasonable safe to do the aggressive probing as we are executing only a single script (standalone execution not a script hosting model)
 
                                         //despite the name of the class the execution (assembly loading) will be in the current domain
                                         //I am just reusing some functionality of the RemoteExecutor class.
+
                                         RemoteExecutor executor = new RemoteExecutor(options.searchDirs);
                                         executor.ExecuteAssembly(assemblyFileName, scriptArgs);
                                     }

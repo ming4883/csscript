@@ -563,9 +563,14 @@
             Pre- and post-execution scripts.
             </summary>
         </member>
+        <member name="P:csscript.CSharpParser.Inits">
+            <summary>
+            Script initialization directives.
+            </summary>
+        </member>
         <member name="P:csscript.CSharpParser.ThreadingModel">
             <summary>
-            Appartment state of the script.
+            Apartment state of the script.
             </summary>
         </member>
         <member name="P:csscript.CSharpParser.Code">
@@ -609,6 +614,11 @@
         <member name="F:csscript.CSharpParser.CmdScriptInfo.abortOnError">
             <summary>
             If set to 'true' parent script will be aborted on pre/post-script error, otherwise the error will be ignored.
+            </summary>
+        </member>
+        <member name="T:csscript.CSharpParser.InitInfo">
+            <summary>
+            Class to hold the script initialization information.
             </summary>
         </member>
         <member name="T:csscript.CSharpParser.ImportInfo">
