@@ -621,6 +621,27 @@
             Class to hold the script initialization information.
             </summary>
         </member>
+        <member name="F:csscript.CSharpParser.InitInfo.CoInitializeSecurity">
+            <summary>
+            The boolean flag indicating if CoInitializeSecurity (with default parameters) should be called at the start of the script execution.
+            </summary>
+        </member>
+        <member name="F:csscript.CSharpParser.InitInfo.RpcImpLevel">
+            <summary>
+            The RpcImpLevel of CoInitializeSecurity arguments
+            </summary>
+        </member>
+        <member name="F:csscript.CSharpParser.InitInfo.EoAuthnCap">
+            <summary>
+            The EoAuthnCap of CoInitializeSecurity arguments
+            </summary>
+        </member>
+        <member name="M:csscript.CSharpParser.InitInfo.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:csscript.CSharpParser.InitInfo"/> class.
+            </summary>
+            <param name="statement">The original argument statement of the <c>//css_init</c> directive.</param>
+        </member>
         <member name="T:csscript.CSharpParser.ImportInfo">
             <summary>
             Class to hold the script importing information, which actually controls how script is imported.

@@ -642,7 +642,7 @@ namespace csscript
                                                       int capabilities,
                                                       IntPtr pReserved3);
 
-        static void ComInitSecurity()
+        static void ComInitSecurity(int RpcImpLevel, int EoAuthnCap)
         {
             int hr = CoInitializeSecurity(
                                IntPtr.Zero,
@@ -654,10 +654,10 @@ namespace csscript
                                IntPtr.Zero,
                                0x40, //EoAuthnCap.DynamicCloaking
                                IntPtr.Zero);
-            if (hr != 0)
-            {
-            //    System.Windows.Forms.MessageBox.Show("!!!   CoInitializeSecurity failed. [" + hr.ToString("0x8") + "]");
-            }
+            //if (hr != 0)
+            //    System.Windows.Forms.MessageBox.Show("CoInitializeSecurity failed. [" + hr + "]", "CS-Script COM Initialization");
+            //else 
+            //    System.Windows.Forms.MessageBox.Show("CoInitializeSecurity succeeded.", "CS-Script COM Initialization");
         }
 
         /// <summary>
@@ -672,7 +672,7 @@ namespace csscript
                 {
                     CSharpParser.InitInfo initInfo = options.initContext as CSharpParser.InitInfo;
                     if (initInfo != null && initInfo.CoInitializeSecurity)
-                            ComInitSecurity();
+                        ComInitSecurity(initInfo.RpcImpLevel, initInfo.EoAuthnCap);
 
                     if (options.local)
                         Environment.CurrentDirectory = Path.GetDirectoryName(Path.GetFullPath(options.scriptFileName));

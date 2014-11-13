@@ -52,6 +52,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Text;
+using System.Globalization;
 
 namespace csscript
 {
@@ -143,10 +144,73 @@ namespace csscript
         /// </summary>
         public class InitInfo
         {
+            /// <summary>
+            /// The boolean flag indicating if CoInitializeSecurity (with default parameters) should be called at the start of the script execution.
+            /// </summary>
             public bool CoInitializeSecurity = false;
+
+            /// <summary>
+            /// The RpcImpLevel of CoInitializeSecurity arguments
+            /// </summary>
+            public int RpcImpLevel = 3;  //RpcImpLevel.Impersonate
+
+            /// <summary>
+            /// The EoAuthnCap of CoInitializeSecurity arguments
+            /// </summary>
+            public int EoAuthnCap = 0x40; //EoAuthnCap.DynamicCloaking
+
+            static char[] tokenDelimiters = new char[] { '(', ')' };
+            static char[] argDelimiters = new char[] { ',' };
+            /// <summary>
+            /// Initializes a new instance of the <see cref="InitInfo"/> class.
+            /// </summary>
+            /// <param name="statement">The original argument statement of the <c>//css_init</c> directive.</param>
             public InitInfo(string statement)
             {
-                CoInitializeSecurity = statement.StartsWith("CoInitializeSecurity");
+                //CoInitializeSecurity or
+                //CoInitializeSecurity(3,0x40)
+
+                bool error = !statement.StartsWith("CoInitializeSecurity");
+
+                if (!error)
+                {
+                    CoInitializeSecurity = true;
+
+                    string[] parts = statement.Split(tokenDelimiters);
+
+                    if (parts.Length == 1 && parts[0].Trim() == "CoInitializeSecurity")
+                        return;
+
+                    error = parts.Length < 2;
+
+                    if (!error) //[CoInitializeSecurity][3,0x40][]
+                    {
+                        string[] args = parts[1].Split(argDelimiters);
+
+                        if (args.Length == 1 && args[0].Trim() == "")
+                        {
+                            //empty brackets CoInitializeSecurity()
+                        }
+                        else
+                        {
+                            error = args.Length != 2
+                                    || (!TryParseInt(args[0], out RpcImpLevel))
+                                    || (!TryParseInt(args[1], out EoAuthnCap));
+                        }
+                    }
+                }
+                
+                if (error)
+                    throw new ApplicationException("Cannot parse //css_init directive. '" + statement + "' is in unexpected format.");
+            }
+
+            bool TryParseInt(string text, out int value)
+            {
+                text = text.TrimStart();
+                if (text.StartsWith("0x", StringComparison.Ordinal))
+                    return int.TryParse(text.Substring(2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out value);
+                else
+                    return int.TryParse(text, out value);
             }
         }
 
@@ -736,7 +800,7 @@ namespace csscript
             get { return cmdScripts.ToArray(); }
 #endif
         }
-       
+
         /// <summary>
         /// Script initialization directives.
         /// </summary>
@@ -1106,7 +1170,7 @@ namespace csscript
         public static string UnescapeDirectiveDelimiters(string text)
         {
             foreach (char c in DirectiveDelimiters)
-                text = text.Replace(new string (c, 2), c.ToString()); //very unoptimized but it is intended only for troubleshooting.
+                text = text.Replace(new string(c, 2), c.ToString()); //very unoptimized but it is intended only for troubleshooting.
             return text;
         }
 
