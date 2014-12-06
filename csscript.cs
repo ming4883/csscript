@@ -689,6 +689,11 @@ namespace csscript
                         CSSUtils.VerbosePrint("> ----------------", options);
                         CSSUtils.VerbosePrint("  TragetFramework: " + options.TargetFramework, options);
                         CSSUtils.VerbosePrint("  CurrentDirectory: " + Environment.CurrentDirectory, options);
+                        if (!Utils.IsLinux())
+                        {
+                            CSSUtils.VerbosePrint("  NuGet manager: " + NuGet.NuGetExeView, options);
+                            CSSUtils.VerbosePrint("  NuGet cache: " + NuGet.NuGetCacheView, options);
+                        }
                         CSSUtils.VerbosePrint("  Executing: " + Path.GetFullPath(options.scriptFileName), options);
                         CSSUtils.VerbosePrint("  Script arguments: ", options);
                         for (int i = 0; i < scriptArgs.Length; i++)
@@ -1248,6 +1253,10 @@ namespace csscript
                     foreach (string asm in AssemblyResolver.FindAssembly(nmSpace, options.searchDirs))
                         requestedRefAsms.AddAssembly(NormalizeGacAssemblyPath(asm));
             }
+
+             //add assemblies referenced from code
+            foreach (string asmName in NuGet.Resolve(parser.Packages))
+                requestedRefAsms.AddAssembly(asmName);
 
             //add assemblies referenced from code
             foreach (string asmName in parser.ReferencedAssemblies)

@@ -46,6 +46,7 @@ using System.Globalization;
 using System.Threading;
 using System.Collections;
 using System.Text.RegularExpressions;
+using System.Diagnostics;
 
 namespace csscript
 {
@@ -233,6 +234,33 @@ namespace csscript
 
                 Thread.Sleep(200);
             }
+        }
+
+        public static bool IsNet45Plus()
+        {
+            // Class "ReflectionContext" exists from .NET 4.5 onwards.
+            return Type.GetType("System.Reflection.ReflectionContext", false) != null;
+        }
+
+        public static bool IsNet40Plus()
+        {
+            return Environment.Version.Major >= 4;
+        }
+
+        public static bool IsNet20Plus()
+        {
+            return Environment.Version.Major >= 2;
+        }
+
+        public static bool IsRuntimeCompatibleAsm(string file)
+        {
+            try
+            {
+                System.Reflection.AssemblyName.GetAssemblyName(file);
+                return true;
+            }
+            catch { }
+            return false;
         }
 
         public static bool IsLinux()
@@ -1644,6 +1672,214 @@ namespace csscript
             builder.Append("   Home dir:       " + (Environment.GetEnvironmentVariable("CSSCRIPT_DIR") ?? "<not integrated>") + "\n");
             return builder.ToString();
         }
+    }
+
+    class NuGet
+    {
+        static public string NuGetCacheView
+        {
+            get { return Directory.Exists(NuGetCache) ? NuGetCache : "<not found>"; }
+        }
+        static public string NuGetExeView
+        {
+            get { return File.Exists(NuGetExe) ? NuGetExe : "<not found>"; }
+        }
+
+        static string nuGetCache = null;
+        static string NuGetCache
+        {
+            get
+            {
+                if (nuGetCache == null)
+                {
+                    nuGetCache = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "CS-Script", "nuget");
+
+                    if (!Directory.Exists(nuGetCache))
+                        Directory.CreateDirectory(nuGetCache);
+                }
+                return nuGetCache;
+            }
+        }
+
+        static string nuGetExe = null;
+        static string NuGetExe
+        {
+            get
+            {
+                if (nuGetExe == null)
+                {
+                    string localDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location); //N++ case
+
+                    nuGetExe = Path.Combine(localDir, "nuget.exe");
+                    if (!File.Exists(nuGetExe))
+                    {
+                        string libDir = Path.Combine(Environment.ExpandEnvironmentVariables("%CSSCRIPT_DIR%"), "lib"); //CS-S installed
+                        nuGetExe = Path.Combine(libDir, "nuget.exe");
+                        if (!File.Exists(nuGetExe))
+                            nuGetExe = null;
+                    }
+                }
+                return nuGetExe;
+            }
+        }
+
+        static public string[] Resolve(string[] packages)
+        {
+            if (!Utils.IsLinux())
+            {
+                List<string> assemblies = new List<string>();
+
+                bool promptPrinted = false;
+                foreach (var item in packages)
+                {
+                    string package = item;
+
+                    bool supressReferencing = item.StartsWith("/noref");
+                    if (supressReferencing)
+                        package = item.Replace("/noref", "").Trim();
+
+                    string packageDir = Path.Combine(NuGetCache, package);
+                    if (!Directory.Exists(packageDir))
+                    {
+                        if (!promptPrinted)
+                            Console.WriteLine("Processing NuGet packages...");
+
+                        promptPrinted = true;
+
+                        try
+                        {
+                            Run(NuGetExe, "install " + package + " -OutputDirectory " + packageDir);
+                        }
+                        catch { }
+                    }
+
+                    if (!Directory.Exists(packageDir))
+                        throw new ApplicationException("Cannot process NuGet package '" + package + "'");
+
+                    if (!supressReferencing)
+                        assemblies.AddRange(GetPackageLibDlls(packageDir));
+                }
+
+                return assemblies.ToArray();
+            }
+            return new string[0];
+        }
+
+        static string[] GetPackageLibDlls(string packageDir)
+        {
+            string latestVersion = Directory.GetDirectories(packageDir)
+                                            .OrderByDescending(x => x)
+                                            .FirstOrDefault();
+
+            string lib = Path.Combine(latestVersion, "lib");
+
+            List<string> dlls = new List<string>();
+            dlls.AddRange(Directory.GetFiles(lib, "*.dll"));
+
+            var libVersions = Directory.GetDirectories(lib, "net*");
+
+            if (libVersions.Length != 0)
+            {
+
+                string compatibleVersion = null;
+
+                if (Utils.IsNet45Plus())
+                {
+                    compatibleVersion = Path.Combine(lib, "net45");
+                    if (!Directory.Exists(compatibleVersion))
+                        compatibleVersion = null;
+                }
+
+                if (compatibleVersion == null && Utils.IsNet40Plus())
+                {
+                    compatibleVersion = Path.Combine(lib, "net40");
+                    if (!Directory.Exists(compatibleVersion))
+                        compatibleVersion = null;
+                }
+
+                if (Utils.IsNet20Plus())
+                {
+                    if (compatibleVersion == null)
+                    {
+                        compatibleVersion = Path.Combine(lib, "net35");
+                        if (!Directory.Exists(compatibleVersion))
+                            compatibleVersion = null;
+                    }
+
+                    if (compatibleVersion == null)
+                    {
+                        compatibleVersion = Path.Combine(lib, "net30");
+                        if (!Directory.Exists(compatibleVersion))
+                            compatibleVersion = null;
+                    }
+
+                    if (compatibleVersion == null)
+                    {
+                        compatibleVersion = Path.Combine(lib, "net20");
+                        if (!Directory.Exists(compatibleVersion))
+                            compatibleVersion = null;
+                    }
+                }
+
+                if (compatibleVersion != null)
+                    dlls.AddRange(Directory.GetFiles(compatibleVersion, "*.dll"));
+            }
+
+            List<string> assemblies = new List<string>();
+
+            foreach (var item in dlls)
+            {
+                //official NuGet documentation states that .resources.dll is not references so we do the same
+                if (!item.EndsWith(".resources.dll", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (Utils.IsRuntimeCompatibleAsm(item))
+                        assemblies.Add(item);
+                }
+            }
+
+            return assemblies.ToArray();
+        }
+
+        static Thread StartMonitor(StreamReader stream)
+        {
+            Thread retval = new Thread(x =>
+            {
+                try
+                {
+                    string line = null;
+                    while (null != (line = stream.ReadLine()))
+                    {
+                        Console.WriteLine(line);
+                    }
+                }
+                catch { }
+            });
+            retval.Start();
+            return retval;
+        }
+
+        static void Run(string exe, string args)
+        {
+            using (Process p = new Process())
+            {
+                p.StartInfo.FileName = exe;
+                p.StartInfo.Arguments = args;
+                p.StartInfo.UseShellExecute = false;
+                p.StartInfo.RedirectStandardOutput = true;
+                p.StartInfo.RedirectStandardError = true;
+                p.StartInfo.CreateNoWindow = true;
+                p.Start();
+
+                var error = StartMonitor(p.StandardError);
+                var output = StartMonitor(p.StandardOutput);
+
+                p.WaitForExit();
+
+                error.Abort();
+                output.Abort();
+            }
+        }
+
     }
 
     //internal class ComInit

@@ -553,6 +553,11 @@
             References to the namespaces.
             </summary>
         </member>
+        <member name="P:csscript.CSharpParser.NuGets">
+            <summary>
+            References to the NuGet packages.
+            </summary>
+        </member>
         <member name="P:csscript.CSharpParser.Imports">
             <summary>
             C# scripts to be imported.
@@ -984,9 +989,14 @@
             Collection of namespaces, which if found in code, should not be resolved into referenced assembly.
             </summary>
         </member>
+        <member name="P:CSScriptLibrary.ScriptParser.Packages">
+            <summary>
+            Collection of the NuGet packages
+            </summary>
+        </member>
         <member name="P:CSScriptLibrary.ScriptParser.ReferencedAssemblies">
             <summary>
-            Collection of referenced asesemblies. All assemblies are referenced either from command-line, code or resolved from referenced namespaces.
+            Collection of referenced assemblies. All assemblies are referenced either from command-line, code or resolved from referenced namespaces.
             </summary>
         </member>
         <member name="T:csscript.COM">

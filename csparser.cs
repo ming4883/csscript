@@ -199,7 +199,7 @@ namespace csscript
                         }
                     }
                 }
-                
+
                 if (error)
                     throw new ApplicationException("Cannot parse //css_init directive. '" + statement + "' is in unexpected format.");
             }
@@ -402,9 +402,14 @@ namespace csscript
             foreach (string statement in GetRawStatements("//css_postscript", endCodePos))
                 cmdScripts.Add(new CmdScriptInfo(statement.Trim(), false, file));
 
-            //analyse script initialization directives
+            //analyze script initialization directives
             foreach (string statement in GetRawStatements("//css_init", endCodePos))
                 inits.Add(new InitInfo(statement.Trim()));
+
+            //analyze script initialization directives
+            foreach (string statement in GetRawStatements("//css_nuget", endCodePos))
+                foreach (string package in SplitByDelimiter(statement, ','))
+                    nugets.Add(package.Trim());
 
             //analyse script imports/includes
             foreach (string statement in GetRawStatements("//css_import", endCodePos))
@@ -778,6 +783,18 @@ namespace csscript
         }
 
         /// <summary>
+        /// References to the NuGet packages.
+        /// </summary>
+        public string[] NuGets
+        {
+#if net1
+            get { return (string[])nugets.ToArray(typeof(string)); }
+#else
+            get { return nugets.ToArray(); }
+#endif
+        }
+
+        /// <summary>
         /// C# scripts to be imported.
         /// </summary>
         public ImportInfo[] Imports
@@ -847,6 +864,7 @@ namespace csscript
         ArrayList hostOptions = new ArrayList();
         ArrayList cmdScripts = new ArrayList();
         ArrayList inits = new ArrayList();
+        ArrayList nugets = new ArrayList();
         ArrayList refNamespaces = new ArrayList();
         ArrayList ignoreNamespaces = new ArrayList();
         ArrayList imports = new ArrayList();
@@ -860,6 +878,7 @@ namespace csscript
         List<string> hostOptions = new List<string>();
         List<CmdScriptInfo> cmdScripts = new List<CmdScriptInfo>();
         List<InitInfo> inits = new List<InitInfo>();
+        List<string> nugets = new List<string>();
         List<string> refNamespaces = new List<string>();
         List<string> ignoreNamespaces = new List<string>();
         List<ImportInfo> imports = new List<ImportInfo>();

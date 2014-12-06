@@ -1100,7 +1100,7 @@ namespace Config
                 IntPtr lIcon = ExtractIcon(0, file, index);
                 iconPictureBox.Image = Icon.FromHandle(lIcon).ToBitmap();
             }
-            catch{}
+            catch { }
         }
 
         [DllImport("user32.dll", SetLastError = true)]
@@ -1234,6 +1234,7 @@ namespace Config
                 }
                 catch (Exception ex) { MessageBox.Show(ex.Message); }
             }
+
             BringOnTop();
         }
 
@@ -1241,7 +1242,7 @@ namespace Config
         {
             ConfigureShellExtensions();
         }
-    
+
         void ConfigureShellExtensions()
         {
             string homeDir = CSScriptInstaller.GetEnvironmentVariable("CSSCRIPT_DIR");
@@ -1327,12 +1328,12 @@ namespace Config
                     doubleClickAction.SelectedItem = null;
 
                     new Thread(delegate() //without this trick combobox does not update its text
+                    {
+                        Invoke((MethodInvoker)delegate()
                         {
-                            Invoke((MethodInvoker)delegate()
-                            {
-                                doubleClickAction.Text = action;
-                            });
-                        }).Start();
+                            doubleClickAction.Text = action;
+                        });
+                    }).Start();
                 }
             }
         }
@@ -1422,6 +1423,7 @@ namespace Config
                         return val.ToString() == "CsScript";
                 }
             }
+
             return false;
         }
 
@@ -1446,10 +1448,11 @@ namespace Config
             {
                 if (IsComShellExtInstalled())
                     using (RegistryKey regKey = Registry.ClassesRoot.OpenSubKey(@"*\shellex\ContextMenuHandlers\CS-Script"))
-                    {
-                        return (regKey != null);
-                    }
+                {
+                    return (regKey != null);
+                }
             }
+
             return false;
         }
 
@@ -1545,7 +1548,7 @@ namespace Config
         {
             get
             {
-                return Path.Combine(comShellEtxDir, "ShellExt.cs.{25D84CB0-7345-11D3-A4A1-0080C8ECFED4}.dll");
+                return Path.Combine(comShellEtxDir, "ShellExt.cs. { 25D84CB0-7345-11D3-A4A1-0080C8ECFED4 }.dll");
             }
         }
 
@@ -1553,7 +1556,7 @@ namespace Config
         {
             get
             {
-                return Path.Combine(comShellEtxDir, @"ShellExt64.cs.{25D84CB0-7345-11D3-A4A1-0080C8ECFED4}.dll");
+                return Path.Combine(comShellEtxDir, @"ShellExt64.cs. { 25D84CB0-7345-11D3-A4A1-0080C8ECFED4 }.dll");
             }
         }
 
@@ -1563,7 +1566,7 @@ namespace Config
             {
                 if (enable)
                 {
-                    SetKeyValue(@"*\shellex\ContextMenuHandlers\CS-Script", "", "{25D84CB0-7345-11D3-A4A1-0080C8ECFED4}");
+                    SetKeyValue(@"*\shellex\ContextMenuHandlers\CS-Script", "", " { 25D84CB0-7345-11D3-A4A1-0080C8ECFED4 }");
                 }
                 else
                 {
@@ -1627,7 +1630,7 @@ namespace Config
                 dialog.Controls.Add(textBox1);
                 dialog.Controls.Add(doNotShowAgain);
                 dialog.Text = title;
-                dialog.KeyPreview = true; ;
+                dialog.KeyPreview = true;;
                 dialog.FormBorderStyle = FormBorderStyle.SizableToolWindow;
                 dialog.StartPosition = FormStartPosition.CenterParent;
                 dialog.KeyDown += (sender, e) =>
@@ -1742,9 +1745,11 @@ namespace Config
                         retval = parent;
                         break;
                     }
+
                     parent = Path.GetDirectoryName(parent);
                 }
             }
+
             return retval;
         }
 
@@ -1792,8 +1797,8 @@ namespace Config
                 using (RegistryKey envVars = Registry.LocalMachine.OpenSubKey("SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment", true)) { }
 
                 using (RegistryKey csReadOnly = Registry.ClassesRoot.OpenSubKey(".cs", false))
-                    if (csReadOnly != null)
-                        using (RegistryKey csWritable = Registry.ClassesRoot.OpenSubKey(".cs", true)) { }
+                if (csReadOnly != null)
+                    using (RegistryKey csWritable = Registry.ClassesRoot.OpenSubKey(".cs", true)) { }
             }
             catch
             {
@@ -1802,7 +1807,7 @@ namespace Config
 
             string scHomeDir = GetEnvironmentVariable("CSSCRIPT_DIR");
             bool preventMigration = false;
-#if CSS_PROJECT
+            #if CSS_PROJECT
             preventMigration = true; //we are running the script under VS
 #endif
             if (scHomeDir == null)
@@ -1966,6 +1971,7 @@ namespace Config
                 }
                 catch { }
             }
+
             return retval;
         }
 
@@ -1976,8 +1982,8 @@ namespace Config
                 doubleClickAction = "\"" + editor + "\" \"%1\"";
             else
 
-                //doubleClickAction = "notepad.exe \"%1\"";
-                doubleClickAction = ConfigForm.DoubleClickNotepadAction;
+            //doubleClickAction = "notepad.exe \"%1\"";
+            doubleClickAction = ConfigForm.DoubleClickNotepadAction;
 
             string scHomeDir = GetEnvironmentVariable("CSSCRIPT_DIR");
 
@@ -1985,12 +1991,12 @@ namespace Config
             string[] ideInfo;
             ArrayList availableIDE = new ArrayList();
 
-            availableIDE.AddRange(VS90.Script.VS90IDE.GetAvailableIDE());   //Visual Studio 2008
-            availableIDE.AddRange(VS80.Script.VS80IDE.GetAvailableIDE());   //Visual Studio 2005
+            availableIDE.AddRange(VS90.Script.VS90IDE.GetAvailableIDE()); //Visual Studio 2008
+            availableIDE.AddRange(VS80.Script.VS80IDE.GetAvailableIDE()); //Visual Studio 2005
 
-            if ((ideInfo = SD.Script.SharpDevelopIDE.GetAvailableIDE()) != null)  //"SharpDevelop"
+            if ((ideInfo = SD.Script.SharpDevelopIDE.GetAvailableIDE()) != null) //"SharpDevelop"
                 availableIDE.Add(ideInfo);
-            if ((ideInfo = CLRDebugger.Script.CLRDE.GetAvailableIDE()) != null)  //Visual Studio 2003
+            if ((ideInfo = CLRDebugger.Script.CLRDE.GetAvailableIDE()) != null) //Visual Studio 2003
                 availableIDE.Add(ideInfo);
 
             //populate contextMenu list
@@ -2111,6 +2117,10 @@ namespace Config
             using (RegistryKey envVars = Registry.LocalMachine.OpenSubKey("SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment", true))
             {
                 envVars.SetValue("CSSCRIPT_DIR", GetExecutingEngineDir());
+                
+                string nuGetCache = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "CS-Script", "nuget");
+                envVars.SetValue("css_nuget", nuGetCache);
+                
                 if (installShellExtension)
                 {
                     envVars.SetValue("CSSCRIPT_SHELLEX_DIR", comShellEtxDir);
@@ -2163,6 +2173,7 @@ namespace Config
                 path = RegGetValueExp(HKEY_LOCAL_MACHINE, @"SYSTEM\CurrentControlSet\Control\Session Manager\Environment", "Path");
                 envVars.DeleteValue("CSSCRIPT_DIR", false);
                 envVars.DeleteValue("CSSCRIPT_SHELLEX_DIR", false);
+                envVars.DeleteValue("css_nuget", false);
                 Environment.SetEnvironmentVariable("CSSCRIPT_SHELLEX_DIR", null);
             }
 

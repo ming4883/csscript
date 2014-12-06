@@ -216,6 +216,11 @@ namespace CSScriptLibrary
         {
             get { return parser.RefAssemblies; }
         }
+       
+        public string[] Packages
+        {
+            get { return parser.NuGets; }
+        }
 
         public string[] ExtraSearchDirs
         {
@@ -243,6 +248,7 @@ namespace CSScriptLibrary
 
         public void ProcessFile()
         {
+            packages.Clear();
             referencedAssemblies.Clear();
             referencedScripts.Clear();
             referencedNamespaces.Clear();
@@ -302,6 +308,7 @@ namespace CSScriptLibrary
         private List<ScriptInfo> referencedScripts = new List<ScriptInfo>();
         private List<string> referencedNamespaces = new List<string>();
         private List<string> referencedAssemblies = new List<string>();
+        private List<string> packages = new List<string>();
         private List<string> referencedResources = new List<string>();
 #endif
         private string[] searchDirs;
@@ -516,6 +523,7 @@ namespace CSScriptLibrary
             }
         }
 
+
         /// <summary>
         /// Collection of resource files referenced from code
         /// </summary>
@@ -575,8 +583,19 @@ namespace CSScriptLibrary
 #endif
         }
 
+         /// <summary>
+        /// Collection of the NuGet packages
+        /// </summary>
+        public string[] Packages
+        {
+#if net1
+            get { return (string[])packages.ToArray(typeof(string)); }
+#else
+            get { return packages.ToArray(); }
+#endif
+        }
         /// <summary>
-        /// Collection of referenced asesemblies. All assemblies are referenced either from command-line, code or resolved from referenced namespaces.
+        /// Collection of referenced assemblies. All assemblies are referenced either from command-line, code or resolved from referenced namespaces.
         /// </summary>
         public string[] ReferencedAssemblies
         {
@@ -632,6 +651,7 @@ namespace CSScriptLibrary
         private void Init(string fileName, string[] searchDirs)
         {
 #if net1
+            packages = new ArrayList();
             referencedNamespaces = new ArrayList();
             referencedAssemblies = new ArrayList();
             referencedResources = new ArrayList();
@@ -639,6 +659,7 @@ namespace CSScriptLibrary
             compilerOptions = new ArrayList();
             precompilers = new ArrayList();
 #else
+            packages = new List<string>();
             referencedNamespaces = new List<string>();
             referencedAssemblies = new List<string>();
             referencedResources = new List<string>();
@@ -661,7 +682,10 @@ namespace CSScriptLibrary
 
             foreach (string asmName in mainFile.ReferencedAssemblies)
                 PushAssembly(asmName);
-
+            
+            foreach (string name in mainFile.Packages)
+                PushPackage(name);
+            
             foreach (string resFile in mainFile.ReferencedResources)
                 PushResource(resFile);
 
@@ -823,6 +847,7 @@ namespace CSScriptLibrary
         private ArrayList referencedResources;
         private ArrayList precompilers;
         private ArrayList referencedAssemblies;
+        private ArrayList packages;
 #else
         private List<string> referencedNamespaces;
         private List<string> ignoreNamespaces;
@@ -830,6 +855,7 @@ namespace CSScriptLibrary
         private List<string> compilerOptions;
         private List<string> precompilers;
         private List<string> referencedAssemblies;
+        private List<string> packages;
 #endif
         /// <summary>
         /// CS-Script SearchDirectories specified in the parsed script or its dependent scripts.
@@ -865,6 +891,11 @@ namespace CSScriptLibrary
         private void PushAssembly(string asmName)
         {
             PushItem(referencedAssemblies, asmName);
+        }
+       
+        private void PushPackage(string name)
+        {
+            PushItem(packages, name);
         }
 
         private void PushResource(string resName)
