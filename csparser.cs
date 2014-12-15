@@ -291,9 +291,20 @@ namespace csscript
 #if DEBUG
         public CSharpParser()
         {
+            InitEnvironment();
         }
-
 #endif
+        static bool NeedInitEnvironment = true;
+        static void InitEnvironment()
+        {
+            if (NeedInitEnvironment)
+            {
+                string css_nuget = Environment.GetEnvironmentVariable("css_nuget");
+                if (css_nuget == null)
+                    Environment.SetEnvironmentVariable("css_nuget", NuGet.NuGetCacheView);
+                NeedInitEnvironment = false;
+            }
+        }
 
         /// <summary>
         /// Creates an instance of CSharpParser.
@@ -301,6 +312,7 @@ namespace csscript
         /// <param name="code">C# code string</param>
         public CSharpParser(string code)
         {
+            InitEnvironment();
             Init(code, "");
         }
 
@@ -311,6 +323,8 @@ namespace csscript
         /// <param name="isFile">If set to 'true' the script is a file, otherwise it is a C# code.</param>
         public CSharpParser(string script, bool isFile)
         {
+            InitEnvironment();
+
             if (!isFile)
                 Init(script, "");
             else
