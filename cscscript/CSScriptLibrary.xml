@@ -910,6 +910,17 @@
             ApartmentState of a script during the execution (default: ApartmentState.Unknown)
             </summary>
         </member>
+        <member name="M:CSScriptLibrary.ScriptParser.ResolvePackages(System.Boolean)">
+            <summary>
+            Resolves the NuGet packages into assemblies to be referenced by the script.
+            <para>If the package was never installed/downloaded yet CS-Script runtime will try to download it.</para>
+            <para>CS-Script will also analyze the installed package structure in try to reference compatible assemblies
+            from the package.</para>
+            </summary>
+            <param name="suppressDownloading">if set to <c>true</c> suppresses downloading the NuGet package. 
+            Suppressing can be useful for the quick 'referencing' assessment.</param>
+            <returns>Collection of the referenced assembly files.</returns>
+        </member>
         <member name="M:CSScriptLibrary.ScriptParser.#ctor(System.String)">
             <summary>
             Constructor.

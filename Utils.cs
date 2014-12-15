@@ -1490,6 +1490,13 @@ namespace csscript
                 builder.Append("This directive is used to inject one script into another at compile time. Thus code from one script can be exercised in another one.\n");
                 builder.Append("'Rename' clause can appear in the directive multiple times.\n");
                 builder.Append("------------------------------------\n");
+                builder.Append("//css_nuget [-noref] package0[,package1]..[,packageN];\n");
+                builder.Append("\n");
+                builder.Append("Downloads/Installs the NuGet package. It also automatically references the downloaded package assemblies.\n");
+                builder.Append("If automatic referencing isn't desired use '-noref' switch.\n");
+                builder.Append("Note : package is not downloaded again if it was already downloaded.\n"); 
+                builder.Append(" Example: //css_nuget cs-script;\n This directive will install CS-Script NuGet package.\n");
+                builder.Append("------------------------------------\n");
                 builder.Append("//css_args arg0[,arg1]..[,argN];\n");
                 builder.Append("\n");
                 builder.Append("Embedded script arguments. The both script and engine arguments are allowed except \"/noconfig\" engine command switch.\n");
@@ -1692,7 +1699,7 @@ namespace csscript
             {
                 if (nuGetCache == null)
                 {
-                    nuGetCache = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "CS-Script", "nuget");
+                    nuGetCache = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "CS-Script" + Path.DirectorySeparatorChar + "nuget");
 
                     if (!Directory.Exists(nuGetCache))
                         Directory.CreateDirectory(nuGetCache);
@@ -1723,41 +1730,61 @@ namespace csscript
             }
         }
 
-        static public string[] Resolve(string[] packages)
+        static bool IsPackageDownloaded(string packageDir)
         {
+            return Directory.Exists(packageDir) && Directory.GetDirectories(packageDir).Length > 0;
+        }
+
+        static public string[] Resolve(string[] packages, bool supressDownloading)
+        {
+#if net1
+            return new string[0];
+        }
+#else
+
             if (!Utils.IsLinux())
             {
                 List<string> assemblies = new List<string>();
 
                 bool promptPrinted = false;
-                foreach (var item in packages)
+                foreach (string item in packages)
                 {
                     string package = item;
 
-                    bool supressReferencing = item.StartsWith("/noref");
+                    bool supressReferencing = item.StartsWith("-noref");
                     if (supressReferencing)
-                        package = item.Replace("/noref", "").Trim();
+                        package = item.Replace("-noref", "").Trim();
 
                     string packageDir = Path.Combine(NuGetCache, package);
-                    if (!Directory.Exists(packageDir))
+
+                    if (supressDownloading)
                     {
-                        if (!promptPrinted)
-                            Console.WriteLine("Processing NuGet packages...");
-
-                        promptPrinted = true;
-
-                        try
-                        {
-                            Run(NuGetExe, "install " + package + " -OutputDirectory " + packageDir);
-                        }
-                        catch { }
+                        //it is OK if the package is not downloaded (e.g. N++ intellisense)
+                        if (!supressReferencing && IsPackageDownloaded(packageDir))
+                            assemblies.AddRange(GetPackageLibDlls(packageDir));
                     }
+                    else
+                    {
+                        if (!IsPackageDownloaded(packageDir))
+                        {
+                            if (!promptPrinted)
+                                Console.WriteLine("NuGet> Processing NuGet packages...");
 
-                    if (!Directory.Exists(packageDir))
-                        throw new ApplicationException("Cannot process NuGet package '" + package + "'");
+                            promptPrinted = true;
 
-                    if (!supressReferencing)
-                        assemblies.AddRange(GetPackageLibDlls(packageDir));
+                            try
+                            {
+                                Run(NuGetExe, "install " + package + " -OutputDirectory " + packageDir);
+                            }
+                            catch { }
+                        }
+
+                        if (!IsPackageDownloaded(packageDir))
+                            throw new ApplicationException("Cannot process NuGet package '" + package + "'");
+
+                        if (!supressReferencing)
+                            assemblies.AddRange(GetPackageLibDlls(packageDir));
+                    }
                 }
 
                 return assemblies.ToArray();
@@ -1879,6 +1906,7 @@ namespace csscript
                 output.Abort();
             }
         }
+#endif
 
     }
 

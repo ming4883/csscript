@@ -1255,7 +1255,7 @@ namespace csscript
             }
 
              //add assemblies referenced from code
-            foreach (string asmName in NuGet.Resolve(parser.Packages))
+            foreach (string asmName in parser.ResolvePackages())
                 requestedRefAsms.AddAssembly(asmName);
 
             //add assemblies referenced from code

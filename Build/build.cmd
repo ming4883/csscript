@@ -75,7 +75,7 @@ ECHO ------------ >> build.log
 
 ECHO Building ChooseDefaultProgram.exe: 
 ECHO Building ChooseDefaultProgram.exe: >> ..\Build\build.log
-"%net4_tools%\csc.exe" /nologo %common_4_params%  /unsafe- /nowarn:1701,1702 /o /out:ChooseDefaultProgram.exe /win32manifest:..\ChooseDefaultProgram\app.manifest /resource:..\ChooseDefaultProgram\CSScript.Resources.resources /target:winexe /win32icon:..\Logo\css_logo.ico  ..\ChooseDefaultProgram\Resources.Designer.cs ..\ChooseDefaultProgram\AssemblyInfo.cs ..\ChooseDefaultProgram\ChooseDefaultProgram.cs /r:"%net4_asms%\System.dll" /r:"%net4_asms%\System.Core.dll" /r:"%net4_asms%\System.Data.dll" /r:"%net4_asms%\System.XML.dll" /r:"%net4_asms%\System.Windows.Forms.dll" >> build.log
+"%net4_tools%\csc.exe" /nologo %common_4_params%  /unsafe- /nowarn:1701,1702 /o /out:ChooseDefaultProgram.exe /win32manifest:..\ChooseDefaultProgram\app.manifest /resource:..\ChooseDefaultProgram\CSScript.Resources.resources /target:exe /win32icon:..\Logo\css_logo.ico  ..\ChooseDefaultProgram\Resources.Designer.cs ..\ChooseDefaultProgram\AssemblyInfo.cs ..\ChooseDefaultProgram\ChooseDefaultProgram.cs /r:"%net4_asms%\System.dll" /r:"%net4_asms%\System.Core.dll" /r:"%net4_asms%\System.Data.dll" /r:"%net4_asms%\System.XML.dll" /r:"%net4_asms%\System.Windows.Forms.dll" >> build.log
 ECHO ------------ >> build.log
 
 ECHO Building cscs.exe (v1.1):

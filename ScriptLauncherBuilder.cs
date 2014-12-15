@@ -75,7 +75,7 @@ namespace csscript
         //+ ensure launcher is not build when building dll/exe without execution
         public string BuildSurrogateLauncher(string scriptAssembly, string tragetFramework, CompilerParameters compilerParams, ApartmentState appartmentState)
         {
-            //string 
+            //Debug.Assert(false);
 #if !net4
             throw new ApplicationException("Cannot build surrogate host application because this script engine is build against early version of CLR.");
 #else
@@ -134,9 +134,9 @@ namespace csscript
             else
                 retval = provider.CompileAssemblyFromSource(compilerParams, code);
 
-
-            if (retval.Errors.Count != 0)
-                throw CompilerException.Create(retval.Errors, true);
+            foreach (CompilerError err in retval.Errors)
+                if(!err.IsWarning)
+                    throw CompilerException.Create(retval.Errors, true);
 
             CSSUtils.SetTimestamp(compilerParams.OutputAssembly, scriptAssembly);
             return compilerParams.OutputAssembly;

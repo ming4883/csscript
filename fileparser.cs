@@ -303,6 +303,7 @@ namespace CSScriptLibrary
         private ArrayList referencedScripts = new ArrayList();
         private ArrayList referencedNamespaces = new ArrayList();
         private ArrayList referencedAssemblies = new ArrayList();
+        private ArrayList packages = new ArrayList();
         private ArrayList referencedResources = new ArrayList();
 #else
         private List<ScriptInfo> referencedScripts = new List<ScriptInfo>();
@@ -581,6 +582,45 @@ namespace CSScriptLibrary
 #else
             get { return ignoreNamespaces.ToArray(); }
 #endif
+        }
+
+#if !net4
+        /// <summary>
+        /// Resolves the NuGet packages into assemblies to be referenced by the script.
+        /// <para>If the package was never installed/downloaded yet CS-Script runtime will try to download it.</para>
+        /// <para>CS-Script will also analyze the installed package structure in try to reference compatible assemblies
+        /// from the package.</para>
+        /// </summary>
+        /// <returns>Collection of the referenced assembly files.</returns>
+        public string[] ResolvePackages()
+        {
+            return ResolvePackages(false);
+        }
+
+        /// <summary>
+        /// Resolves the NuGet packages into assemblies to be referenced by the script.
+        /// <para>If the package was never installed/downloaded yet CS-Script runtime will try to download it.</para>
+        /// <para>CS-Script will also analyze the installed package structure in try to reference compatible assemblies
+        /// from the package.</para>
+        /// </summary>
+        /// <param name="suppressDownloading">if set to <c>true</c> suppresses downloading the NuGet package. 
+        /// Suppressing can be useful for the quick 'referencing' assessment.</param>
+        /// <returns>Collection of the referenced assembly files.</returns>
+        public string[] ResolvePackages(bool suppressDownloading)
+#else
+        /// <summary>
+        /// Resolves the NuGet packages into assemblies to be referenced by the script.
+        /// <para>If the package was never installed/downloaded yet CS-Script runtime will try to download it.</para>
+        /// <para>CS-Script will also analyze the installed package structure in try to reference compatible assemblies
+        /// from the package.</para>
+        /// </summary>
+        /// <param name="suppressDownloading">if set to <c>true</c> suppresses downloading the NuGet package. 
+        /// Suppressing can be useful for the quick 'referencing' assessment.</param>
+        /// <returns>Collection of the referenced assembly files.</returns>
+        public string[] ResolvePackages(bool suppressDownloading = false)
+#endif
+        {
+            return NuGet.Resolve(Packages, suppressDownloading);
         }
 
          /// <summary>

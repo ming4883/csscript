@@ -270,6 +270,7 @@ namespace csscript
             });
 
             process.WaitForExit();
+            Environment.ExitCode = process.ExitCode;
 
             while (!outputDrained || !errorOutputDrained) //the output buffer may still contain some data just after the process exited
                 Thread.Sleep(1);

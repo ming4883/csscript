@@ -52,7 +52,7 @@
     <CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
-    <DefineConstants>TRACE;DEBUG;_net1;PostSharpInstalled; net4; fork_x86</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;_net1;PostSharpInstalled; _net35;net4; fork_x86</DefineConstants>
     <DocumentationFile>CSScriptLibrary.xml</DocumentationFile>
     <DebugSymbols>true</DebugSymbols>
     <FileAlignment>4096</FileAlignment>
