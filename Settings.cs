@@ -255,7 +255,7 @@ namespace csscript
             set { searchDirs = value; }
         }
 
-        private string searchDirs = "%CSSCRIPT_DIR%" + Path.DirectorySeparatorChar + "Lib";
+        private string searchDirs = "%CSSCRIPT_DIR%" + Path.DirectorySeparatorChar + "Lib;%CSSCRIPT_DIR%" + Path.DirectorySeparatorChar + "inc;";
 
         /// <summary>
         /// Add search directory to the search (probing) path Settings.SearchDirs.

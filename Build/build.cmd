@@ -182,7 +182,8 @@ ECHO Building CSSCodeProvider.v1.1.dll: >> ..\Build\build.log
 rem cscs.exe /nl /noconfig /cd ..\CSSCodeProvider\CSSCodeProvider.cs >> ..\Build\build.log
 %windir%\Microsoft.NET\Framework\v2.0.50727\csc /nologo /nowarn:618,162 /define:net1 /o /out:..\Build\temp\temp\CSSCodeProvider.v1.1.dll /t:library ..\CSSCodeProvider\CSSCodeProvider.cs ..\CSSCodeProvider\ccscompiler.cs ..\CSSCodeProvider\AssemblyInfo.cs ..\CSSCodeProvider\cppcompiler.cs ..\CSSCodeProvider\xamlcompiler.cs /r:System.dll /r:Microsoft.JScript.dll /r:System.Windows.Forms.dll >> build.log
 move ..\Build\temp\temp\CSSCodeProvider.v1.1.dll CSSCodeProvider.v1.1.dll
-ECHO ------------ECHO ------------ >> ..\Build\build.log
+rem ECHO ------------ECHO ------------ >> ..\Build\build.log
+ECHO ------------ >> build.log
 
 ECHO Building CSSCodeProvider.v3.5.dll: >> ..\Build\build.log
 %windir%\Microsoft.NET\Framework\v3.5\csc /nologo /nowarn:618 /o /out:..\Build\temp\temp\CSSCodeProvider.v3.5.dll /t:library ..\CSSCodeProvider.v3.5\CSSCodeProvider.cs ..\CSSCodeProvider.v3.5\ccscompiler.cs ..\CSSCodeProvider.v3.5\AssemblyInfo.cs ..\CSSCodeProvider.v3.5\cppcompiler.cs ..\CSSCodeProvider.v3.5\xamlcompiler.cs /r:System.dll /r:Microsoft.JScript.dll /r:System.Windows.Forms.dll >> build.log
