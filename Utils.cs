@@ -1143,6 +1143,7 @@ namespace csscript
                         if (Path.IsPathRooted(item.file)) //is absolute path
                         {
                             dependencyFile = item.file;
+                            CSExecutor.options.AddSearchDir(Path.GetDirectoryName(item.file));
                         }
                         else
                         {
@@ -1761,7 +1762,7 @@ namespace csscript
                     {
                         //it is OK if the package is not downloaded (e.g. N++ intellisense)
                         if (!supressReferencing && IsPackageDownloaded(packageDir))
-                            assemblies.AddRange(GetPackageLibDlls(packageDir));
+                            assemblies.AddRange(GetPackageLibDlls(package));
                     }
                     else
                     {
@@ -1783,7 +1784,7 @@ namespace csscript
                             throw new ApplicationException("Cannot process NuGet package '" + package + "'");
 
                         if (!supressReferencing)
-                            assemblies.AddRange(GetPackageLibDlls(packageDir));
+                            assemblies.AddRange(GetPackageLibDlls(package));
                     }
                 }
 
@@ -1792,24 +1793,29 @@ namespace csscript
             return new string[0];
         }
 
-        static string[] GetPackageLibDlls(string packageDir)
+        static public string[] GetPackageLibDirs(string package)
         {
+            List<string> result = new List<string>();
+
+            string packageDir = Path.Combine(NuGetCache, package);
+
             string latestVersion = Directory.GetDirectories(packageDir)
                                             .OrderByDescending(x => x)
                                             .FirstOrDefault();
 
+            if (latestVersion == null)
+                return null;
+
             string lib = Path.Combine(latestVersion, "lib");
 
-            List<string> dlls = new List<string>();
-            dlls.AddRange(Directory.GetFiles(lib, "*.dll"));
+            string compatibleVersion = null;
+            if (Directory.GetFiles(lib, "*.dll").Any())
+                result.Add(lib);
 
             var libVersions = Directory.GetDirectories(lib, "net*");
 
             if (libVersions.Length != 0)
             {
-
-                string compatibleVersion = null;
-
                 if (Utils.IsNet45Plus())
                 {
                     compatibleVersion = Path.Combine(lib, "net45");
@@ -1849,8 +1855,17 @@ namespace csscript
                 }
 
                 if (compatibleVersion != null)
-                    dlls.AddRange(Directory.GetFiles(compatibleVersion, "*.dll"));
+                    result.Add(compatibleVersion);
             }
+
+            return result.ToArray();
+        }
+
+        static string[] GetPackageLibDlls(string package)
+        {
+            List<string> dlls = new List<string>();
+            foreach (string dir in GetPackageLibDirs(package))
+                dlls.AddRange(Directory.GetFiles(dir, "*.dll"));
 
             List<string> assemblies = new List<string>();
 
