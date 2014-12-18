@@ -1548,7 +1548,7 @@ namespace Config
         {
             get
             {
-                return Path.Combine(comShellEtxDir, "ShellExt.cs. { 25D84CB0-7345-11D3-A4A1-0080C8ECFED4 }.dll");
+                return Path.Combine(comShellEtxDir, "ShellExt.cs.{25D84CB0-7345-11D3-A4A1-0080C8ECFED4}.dll");
             }
         }
 
@@ -1556,7 +1556,7 @@ namespace Config
         {
             get
             {
-                return Path.Combine(comShellEtxDir, @"ShellExt64.cs. { 25D84CB0-7345-11D3-A4A1-0080C8ECFED4 }.dll");
+                return Path.Combine(comShellEtxDir, @"ShellExt64.cs.{25D84CB0-7345-11D3-A4A1-0080C8ECFED4}.dll");
             }
         }
 
@@ -1566,7 +1566,7 @@ namespace Config
             {
                 if (enable)
                 {
-                    SetKeyValue(@"*\shellex\ContextMenuHandlers\CS-Script", "", " { 25D84CB0-7345-11D3-A4A1-0080C8ECFED4 }");
+                    SetKeyValue(@"*\shellex\ContextMenuHandlers\CS-Script", "", "{25D84CB0-7345-11D3-A4A1-0080C8ECFED4}");
                 }
                 else
                 {
