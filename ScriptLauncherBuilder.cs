@@ -147,6 +147,8 @@ namespace csscript
 using System.Collections;
 using System.IO;
 using System.Reflection;
+using System.Threading;
+using System.Diagnostics;
 
 class Script
 {
@@ -176,12 +178,19 @@ class Script
 
         ArrayList newArgs = new ArrayList();
         foreach (string arg in args)
-            if (arg.StartsWith(""/css_host_dbg:""))
-                debug = (arg == ""/css_host_dbg:true"");
-            else if (arg.StartsWith(""/css_host_asm:""))
-                scriptAssembly = arg.Substring(""/css_host_asm:"".Length);
+        {
+            if (arg.StartsWith(""/css_host_""))
+            {
+                if (arg.StartsWith(""/css_host_dbg:""))
+                    debug = (arg == ""/css_host_dbg:true"");
+                else if (arg.StartsWith(""/css_host_parent:""))
+                    parentHostProcess = int.Parse(arg.Substring(""/css_host_parent:"".Length));
+                else if (arg.StartsWith(""/css_host_asm:""))
+                    scriptAssembly = arg.Substring(""/css_host_asm:"".Length);
+            }
             else
                 newArgs.Add(arg);
+        }
 
         if (debug)
         {
@@ -190,6 +199,8 @@ class Script
                 System.Diagnostics.Debugger.Break();
         }
         
+        ThreadPool.QueueUserWorkItem(MonitorParentHost);
+
         if (scriptAssembly == """")
         {
             scriptAssembly = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), ""${ASM_MANE}"");
@@ -197,6 +208,26 @@ class Script
         InvokeStaticMain(Assembly.LoadFrom(scriptAssembly), (string[])newArgs.ToArray(typeof(string)));
     }
 
+    static int parentHostProcess = -1;
+    static void MonitorParentHost(object state)
+    {
+        if (parentHostProcess != -1)
+        {
+            while (IsProcessRunning(parentHostProcess))
+                Thread.Sleep(500);
+            Process.GetCurrentProcess().Kill();
+        }
+    }
+
+    static bool IsProcessRunning(int id)
+    {
+        try
+        {
+            return Process.GetProcessById(parentHostProcess) != null;
+        }
+        catch { }
+        return false;
+    }
     static void InvokeStaticMain(Assembly compiledAssembly, string[] scriptArgs)
     {
         MethodInfo method = null;
