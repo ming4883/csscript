@@ -216,7 +216,7 @@ namespace CSScriptLibrary
         {
             get { return parser.RefAssemblies; }
         }
-       
+
         public string[] Packages
         {
             get { return parser.NuGets; }
@@ -324,14 +324,43 @@ namespace CSScriptLibrary
             return ResolveFile(fileName, extraDirs, _throwOnError);
         }
 
+        public delegate string ResolveFileHandler(string file, string[] extraDirs, bool throwOnError);
+
+        /// <summary>
+        /// The resolve file algorithm,
+        /// <para>
+        /// The default algorithm searches for script file by given script name. Search order:
+        /// 1. Current directory
+        /// 2. extraDirs (usually %CSSCRIPT_DIR%\Lib and ExtraLibDirectory)
+        /// 3. PATH
+        /// Also fixes file name if user did not provide extension for script file (assuming .cs extension)
+        /// </para>
+        /// </summary>
+        public static ResolveFileHandler ResolveFileAlgorithm = ResolveFileDefault;
+
         /// <summary>
         /// Searches for script file by given script name. Search order:
         /// 1. Current directory
         /// 2. extraDirs (usually %CSSCRIPT_DIR%\Lib and ExtraLibDirectory)
         /// 3. PATH
         /// Also fixes file name if user did not provide extension for script file (assuming .cs extension)
+        /// <para>If the default implementation isn't suitable then you can set <c>FileParser.ResolveFileAlgorithm</c> 
+        /// to the alternative implementation of the probing algorithm.</para>
         /// </summary>
         public static string ResolveFile(string file, string[] extraDirs, bool throwOnError)
+        {
+            return ResolveFileAlgorithm(file, extraDirs, throwOnError);
+        }
+
+        //static string ResolveFileTest(string file, string[] extraDirs, bool throwOnError)
+        //{
+        //    string result = ResolveFileDefault(file, extraDirs, throwOnError);
+        //    if (result.EndsWith("WorkScript.cs"))
+        //        result = Path.Combine(Path.GetDirectoryName(result), Path.GetFileNameWithoutExtension(result) + "_1.cs");
+        //    return result;
+        //}
+
+        static string ResolveFileDefault(string file, string[] extraDirs, bool throwOnError)
         {
             string retval = ResolveFile(file, extraDirs, "");
             if (retval == "")
@@ -623,7 +652,7 @@ namespace CSScriptLibrary
             return NuGet.Resolve(Packages, suppressDownloading);
         }
 
-         /// <summary>
+        /// <summary>
         /// Collection of the NuGet packages
         /// </summary>
         public string[] Packages
@@ -722,10 +751,10 @@ namespace CSScriptLibrary
 
             foreach (string asmName in mainFile.ReferencedAssemblies)
                 PushAssembly(asmName);
-            
+
             foreach (string name in mainFile.Packages)
                 PushPackage(name);
-            
+
             foreach (string resFile in mainFile.ReferencedResources)
                 PushResource(resFile);
 
@@ -932,7 +961,7 @@ namespace CSScriptLibrary
         {
             PushItem(referencedAssemblies, asmName);
         }
-       
+
         private void PushPackage(string name)
         {
             PushItem(packages, name);

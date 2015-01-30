@@ -68,6 +68,12 @@ namespace csscript
         /// </summary>
         static void Main(string[] rawArgs)
         {
+            //CSScriptLibrary.AssemblyResolver.FindAssembly("", new[] { @"%CSSCRIPT_DIR%\Lib" });
+            //var tt = Assembly.Load("Microsoft.TeamFoundation.Client, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a");
+            
+            //var tt1 = Assembly.LoadFrom(@"C:\Program Files (x86)\Microsoft Visual Studio 11.0\Common7\IDE\ReferenceAssemblies\v2.0\Microsoft.TeamFoundation.Client.dll").FullName;
+            //var tt2 = Assembly.LoadFrom(@"C:\Program Files (x86)\Microsoft Visual Studio 12.0\Common7\IDE\ReferenceAssemblies\v2.0\Microsoft.TeamFoundation.Client.dll").FullName;
+
             Console.OutputEncoding = System.Text.Encoding.UTF8;
 
             //work around of nusty Win7x64 problem.
@@ -170,7 +176,7 @@ namespace csscript
                 try
                 {
                     string assemblyHost = ScriptLauncherBuilder.GetLauncherName(e.ScriptAssembly);
-                    string appArgs = CSSUtils.cmdFlagPrefix+"css_host_parent:"+Process.GetCurrentProcess().Id+" \"" + CSSUtils.cmdFlagPrefix + "css_host_asm:" + e.ScriptAssembly + "\" " + GenerateCommandLineArgumentsString(e.ScriptArgs);
+                    string appArgs = CSSUtils.cmdFlagPrefix + "css_host_parent:" + Process.GetCurrentProcess().Id + " \"" + CSSUtils.cmdFlagPrefix + "css_host_asm:" + e.ScriptAssembly + "\" " + GenerateCommandLineArgumentsString(e.ScriptArgs);
                     if (e.StartDebugger)
                         appArgs = CSSUtils.cmdFlagPrefix + "css_host_dbg:true " + appArgs;
 

@@ -133,7 +133,7 @@ namespace csscript
                 try
                 {
                     string assemblyHost = ScriptLauncherBuilder.GetLauncherName(e.ScriptAssembly);
-                    string appArgs = CSSUtils.cmdFlagPrefix+"css_host_parent: "+Process.GetCurrentProcess().Id+" /css_host_asm:" + e.ScriptAssembly + " " + GenerateCommandLineArgumentsString(e.ScriptArgs);
+                    string appArgs = CSSUtils.cmdFlagPrefix + "css_host_parent: " + Process.GetCurrentProcess().Id + " \"" + CSSUtils.cmdFlagPrefix + "css_host_asm:" + e.ScriptAssembly + "\" " + GenerateCommandLineArgumentsString(e.ScriptArgs);
                     if (e.StartDebugger)
                         appArgs = "/css_host_dbg:true " + appArgs;
 

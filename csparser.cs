@@ -289,7 +289,10 @@ namespace csscript
 
         #region Public interface
 #if DEBUG
-        public CSharpParser()
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CSharpParser"/> class.
+        /// </summary>
+        public CSharpParser() //Needed for testing only. Otherwise you will always call the constructor with the parameters
         {
             InitEnvironment();
         }

@@ -126,8 +126,7 @@ namespace csscript
             {
                 compilerParams.IncludeDebugInformation = true;
                 compilerParams.CompilerOptions += " /d:DEBUG";
-                //string launcherFile = @"C:\Users\OSH\Desktop\New folder (2)\script.launcher.cs";
-                string launcherFile = Path.GetTempFileName();
+                string launcherFile = @"C:\Users\<user>\Desktop\New folder\script.launcher.cs";
                 File.WriteAllText(launcherFile, code);
                 retval = provider.CompileAssemblyFromFile(compilerParams, launcherFile);
             }
