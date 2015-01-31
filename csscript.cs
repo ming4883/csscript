@@ -827,7 +827,7 @@ namespace csscript
                                         }
                                     }
 
-                                    
+
 
                                     if (options.useCompiled || options.cleanupShellCommand != "")
                                     {
@@ -1069,6 +1069,17 @@ namespace csscript
                     locations[assemblyID] = location;
             }
 
+            public bool ContainsAssembly(string name)
+            {
+                string assemblyID = name.ToUpperInvariant();
+                foreach (string key in locations.Keys)
+                {
+                    if (Path.GetFileNameWithoutExtension(key) == assemblyID)
+                        return true;
+                }
+                return false;
+            }
+
             System.Collections.Hashtable locations = new System.Collections.Hashtable();
         }
 
@@ -1241,20 +1252,7 @@ namespace csscript
 
             AssemblyResolver.ignoreFileName = Path.GetFileNameWithoutExtension(scriptFileName) + ".dll";
 
-            //add local and global assemblies (if found) that have the same assembly name as a namespace
-            foreach (string nmSpace in parser.ReferencedNamespaces)
-            {
-                bool ignore = false; //user may nominate namespaces to be excluded fro namespace-to-asm resolving
-                foreach (string ignoreNamespace in parser.IgnoreNamespaces)
-                    if (ignoreNamespace == nmSpace)
-                        ignore = true;
-
-                if (!ignore)
-                    foreach (string asm in AssemblyResolver.FindAssembly(nmSpace, options.searchDirs))
-                        requestedRefAsms.AddAssembly(NormalizeGacAssemblyPath(asm));
-            }
-
-             //add assemblies referenced from code
+            //add assemblies referenced from code
             foreach (string asmName in parser.ResolvePackages())
                 requestedRefAsms.AddAssembly(asmName);
 
@@ -1279,6 +1277,30 @@ namespace csscript
                     else
                     {
                         requestedRefAsms.AddAssembly(asm);
+                    }
+                }
+            }
+
+            bool disableNamespaceResolving = false;
+            if (parser.IgnoreNamespaces.Length == 1 && parser.IgnoreNamespaces[0] == "*")
+                disableNamespaceResolving = true;
+
+            if (!disableNamespaceResolving)
+            {
+                //add local and global assemblies (if found) that have the same assembly name as a namespace
+                foreach (string nmSpace in parser.ReferencedNamespaces)
+                {
+                    bool ignore = false; //user may nominate namespaces to be excluded fro namespace-to-asm resolving
+                    foreach (string ignoreNamespace in parser.IgnoreNamespaces)
+                        if (ignoreNamespace == nmSpace)
+                            ignore = true;
+
+                    if (!ignore)
+                    {
+                        bool alreadyFound = requestedRefAsms.ContainsAssembly(nmSpace);
+                        if (!alreadyFound)
+                            foreach (string asm in AssemblyResolver.FindAssembly(nmSpace, options.searchDirs))
+                                requestedRefAsms.AddAssembly(NormalizeGacAssemblyPath(asm));
                     }
                 }
             }
