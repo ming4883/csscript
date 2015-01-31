@@ -55,33 +55,18 @@ namespace csscript
         [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         internal static extern bool SetEnvironmentVariable(string lpName, string lpValue);
 
-        //static void Test()
-        //{
-        //    string code = File.ReadAllText(@"C:\Users\----\Documents\C# Scripts\New Script7.cs");
-        //    //AutoclassPrecompiler.Compile(ref code, null, true, null);
-        //    int pos = 88;
-        //    AutoclassGenerator.Process(code, ref pos);
-        //}
-
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
         static void Main(string[] rawArgs)
         {
-            //CSScriptLibrary.AssemblyResolver.FindAssembly("", new[] { @"%CSSCRIPT_DIR%\Lib" });
-            //var tt = Assembly.Load("Microsoft.TeamFoundation.Client, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a");
-            
-            //var tt1 = Assembly.LoadFrom(@"C:\Program Files (x86)\Microsoft Visual Studio 11.0\Common7\IDE\ReferenceAssemblies\v2.0\Microsoft.TeamFoundation.Client.dll").FullName;
-            //var tt2 = Assembly.LoadFrom(@"C:\Program Files (x86)\Microsoft Visual Studio 12.0\Common7\IDE\ReferenceAssemblies\v2.0\Microsoft.TeamFoundation.Client.dll").FullName;
-
             Console.OutputEncoding = System.Text.Encoding.UTF8;
 
             //work around of nusty Win7x64 problem.
             //http://superuser.com/questions/527728/cannot-resolve-windir-cannot-modify-path-or-path-being-reset-on-boot
             if (Environment.GetEnvironmentVariable("windir") == null)
                 Environment.SetEnvironmentVariable("windir", Environment.GetEnvironmentVariable("SystemRoot"));
-            //var tt = Assembly.GetExecutingAssembly().Location;
-            //Test();
+
             Profiler.Stopwatch.Start();
 
             string[] args = rawArgs;

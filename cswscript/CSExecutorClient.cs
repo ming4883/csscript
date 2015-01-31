@@ -133,11 +133,11 @@ namespace csscript
                 try
                 {
                     string assemblyHost = ScriptLauncherBuilder.GetLauncherName(e.ScriptAssembly);
-                    string appArgs = CSSUtils.cmdFlagPrefix + "css_host_parent: " + Process.GetCurrentProcess().Id + " \"" + CSSUtils.cmdFlagPrefix + "css_host_asm:" + e.ScriptAssembly + "\" " + GenerateCommandLineArgumentsString(e.ScriptArgs);
+                    string appArgs = CSSUtils.cmdFlagPrefix + "css_host_parent:" + Process.GetCurrentProcess().Id + " \"" + CSSUtils.cmdFlagPrefix + "css_host_asm:" + e.ScriptAssembly + "\" " + GenerateCommandLineArgumentsString(e.ScriptArgs);
                     if (e.StartDebugger)
                         appArgs = "/css_host_dbg:true " + appArgs;
 
-                    RunConsoleApp(assemblyHost, appArgs);
+                    int exitCode = RunConsoleApp(assemblyHost, appArgs);
                 }
                 catch (Exception e1)
                 {
@@ -180,7 +180,7 @@ namespace csscript
             return sb.ToString();
         }
 
-        static void RunConsoleApp(string app, string args)
+        static int RunConsoleApp(string app, string args)
         {
             Process process = new Process();
             process.StartInfo.FileName = app;
@@ -190,6 +190,8 @@ namespace csscript
             process.StartInfo.CreateNoWindow = true;
             process.Start();
             process.WaitForExit();
+
+            return process.ExitCode;
         }
     }
 

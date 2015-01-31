@@ -104,7 +104,7 @@ namespace csscript
                 compilerParams.CompilerOptions += " /target:winexe";
 
             string refAssemblies = "";
-            string appartment    = "[STAThread]";
+            string appartment = "[STAThread]";
             if (appartmentState == ApartmentState.MTA)
                 appartment = "[" + appartmentState + "Thread]";
             else if (appartmentState == ApartmentState.Unknown)
@@ -121,12 +121,14 @@ namespace csscript
 
             CompilerResults retval;
 
+            compilerParams.IncludeDebugInformation = true;
+
             bool debugLauncher = false;
             if (debugLauncher)
             {
-                compilerParams.IncludeDebugInformation = true;
                 compilerParams.CompilerOptions += " /d:DEBUG";
-                string launcherFile = @"C:\Users\<user>\Desktop\New folder\script.launcher.cs";
+
+                string launcherFile = @"C:\Users\%USERNAME%\Desktop\New folder\script.launcher.cs";
                 File.WriteAllText(launcherFile, code);
                 retval = provider.CompileAssemblyFromFile(compilerParams, launcherFile);
             }
@@ -134,7 +136,7 @@ namespace csscript
                 retval = provider.CompileAssemblyFromSource(compilerParams, code);
 
             foreach (CompilerError err in retval.Errors)
-                if(!err.IsWarning)
+                if (!err.IsWarning)
                     throw CompilerException.Create(retval.Errors, true);
 
             CSSUtils.SetTimestamp(compilerParams.OutputAssembly, scriptAssembly);
@@ -170,7 +172,7 @@ class Script
    
     static public void MainImpl(string[] args)
     {
-        System.Diagnostics.Debug.Assert(false);
+        //System.Diagnostics.Debug.Assert(false);
 
         string scriptAssembly = """";
         bool debug = false;

@@ -1516,7 +1516,7 @@ namespace csscript
 
             ProcessCompilingResult(results, compilerParams, parser, scriptFileName, assemblyFileName, additionalDependencies);
 
-            if (options.useSurrogateHostingProcess && !options.supressExecution)
+            if (options.useSurrogateHostingProcess)
             {
                 new ScriptLauncherBuilder().BuildSurrogateLauncher(assemblyFileName, options.TargetFramework, compilerParams, options.apartmentState);
             }
