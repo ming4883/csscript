@@ -1215,7 +1215,15 @@ namespace csscript
             return compiler;
         }
 
+
         private void AddReferencedAssemblies(CompilerParameters compilerParams, string scriptFileName, ScriptParser parser)
+        {
+            //scriptFileName is obsolete as it is now can be obtained from parser (ScriptParser.ScriptPath)
+            string[] asms = AggregateReferencedAssemblies(parser);
+            compilerParams.ReferencedAssemblies.AddRange(asms);
+        }
+
+        internal string[] AggregateReferencedAssemblies(ScriptParser parser)
         {
             UniqueAssemblyLocations requestedRefAsms = new UniqueAssemblyLocations();
 
@@ -1266,7 +1274,7 @@ namespace csscript
                 }
             }
 
-            AssemblyResolver.ignoreFileName = Path.GetFileNameWithoutExtension(scriptFileName) + ".dll";
+            AssemblyResolver.ignoreFileName = Path.GetFileNameWithoutExtension(parser.ScriptPath) + ".dll";
 
             //add assemblies referenced from code
             foreach (string asmName in parser.ResolvePackages())
@@ -1321,7 +1329,7 @@ namespace csscript
                 }
             }
 
-            compilerParams.ReferencedAssemblies.AddRange((string[])requestedRefAsms);
+            return (string[])requestedRefAsms;
         }
 
         private string NormalizeGacAssemblyPath(string asm)

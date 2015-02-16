@@ -1048,6 +1048,11 @@
             Collection of referenced assemblies. All assemblies are referenced either from command-line, code or resolved from referenced namespaces.
             </summary>
         </member>
+        <member name="P:CSScriptLibrary.ScriptParser.ScriptPath">
+            <summary>
+            The path of the parsed script.
+            </summary>
+        </member>
         <member name="T:csscript.COM">
             <summary>
             COM HR checker: just to make code more compact;

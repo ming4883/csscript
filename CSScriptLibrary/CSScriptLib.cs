@@ -474,6 +474,23 @@ namespace CSScriptLibrary
         }
 
         /// <summary>
+        /// Aggregates the referenced assemblies found by parser.
+        /// </summary>
+        /// <param name="parser">The parser.</param>
+        /// <param name="searchDirs">Extra search/probing directories.</param>
+        /// <param name="defaultRefAssemblies">The default reference assemblies. It is a semicolon separated assembly names string 
+        /// (e.g. "System.Core; System.Linq;").</param>
+        /// <returns></returns>
+        public static string[] AggregateReferencedAssemblies(ScriptParser parser, string[] searchDirs, string defaultRefAssemblies)
+        {
+            //Interface to be used via reflection (e.g. by Notepad++ plugin)
+            CSExecutor executor = new CSExecutor();
+            executor.GetOptions().searchDirs = searchDirs;
+            executor.GetOptions().defaultRefAssemblies = defaultRefAssemblies;
+            return executor.AggregateReferencedAssemblies(parser);
+        }
+
+        /// <summary>
         /// Enables automatic resolving of unsuccessful assembly probing on the base of the Settings.SearchDirs.
         /// Default value is true.
         ///

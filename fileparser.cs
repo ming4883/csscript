@@ -711,12 +711,23 @@ namespace CSScriptLibrary
         }
 
         /// <summary>
+        /// The path of the parsed script.
+        /// </summary>
+        public string ScriptPath
+        {
+            get { return scriptPath; }
+            private set { scriptPath = value;}
+        }
+        string scriptPath;
+
+        /// <summary>
         /// Initialization of ScriptParser instance
         /// </summary>
         /// <param name="fileName">Script file name</param>
         /// <param name="searchDirs">Extra ScriptLibrary directory(ies) </param>
         private void Init(string fileName, string[] searchDirs)
         {
+            ScriptPath = fileName;
 #if net1
             packages = new ArrayList();
             referencedNamespaces = new ArrayList();
