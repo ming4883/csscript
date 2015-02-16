@@ -1863,7 +1863,7 @@ namespace Config
                     doubleClickAction = ConfigForm.DoubleClickNotepadAction;
 
                 scHomeDir = GetEnvironmentVariable("CSSCRIPT_DIR");
-                MergeUserIncluds(scHomeDir);
+                MergeLocalIncluds(scHomeDir);
             }
             else if (string.Compare(GetExecutingEngineDir(), GetEnvironmentVariable("CSSCRIPT_DIR"), true) != 0 && !preventMigration)
             {
@@ -1896,7 +1896,7 @@ namespace Config
                     this.ShellExtensionHasMoved = true;
 
                     scHomeDir = GetEnvironmentVariable("CSSCRIPT_DIR");
-                    MergeUserIncluds(scHomeDir);
+                    MergeLocalIncluds(scHomeDir);
                 }
                 else
                     throw new Exception("Operation cancelled by user.");
@@ -2012,19 +2012,20 @@ namespace Config
             private IntPtr _hwnd;
         }
 
-        static void MergeUserIncluds(string scHomeDir)
+        static string localIncludesDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "CS-Script\\inc");
+        
+        static void MergeLocalIncluds(string scHomeDir)
         {
             string cssIncludesDir = Path.Combine(scHomeDir, "inc");
-            string userIncludesDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "CS-Script\\inc");
 
             if (Directory.Exists(cssIncludesDir))
             {
-                if (!Directory.Exists(userIncludesDir))
-                    Directory.CreateDirectory(userIncludesDir);
+                if (!Directory.Exists(localIncludesDir))
+                    Directory.CreateDirectory(localIncludesDir);
 
                 foreach (string srcFile in Directory.GetFiles(cssIncludesDir))
                 {
-                    string destFile = Path.Combine(userIncludesDir, Path.GetFileName(srcFile));
+                    string destFile = Path.Combine(localIncludesDir, Path.GetFileName(srcFile));
                     if (!File.Exists(destFile))
                         File.Copy(srcFile, destFile);
                 }
@@ -2224,6 +2225,7 @@ namespace Config
                     Environment.SetEnvironmentVariable("CSSCRIPT_SHELLEX_DIR", null);
                 }
 
+                Environment.SetEnvironmentVariable("CSSCRIPT_INC", localIncludesDir); 
                 Environment.SetEnvironmentVariable("CSSCRIPT_DIR", GetExecutingEngineDir()); //for current process too
                 path = RegGetValueExp(HKEY_LOCAL_MACHINE, @"SYSTEM\CurrentControlSet\Control\Session Manager\Environment", "Path");
             }
@@ -2263,6 +2265,7 @@ namespace Config
             using (RegistryKey envVars = Registry.LocalMachine.OpenSubKey("SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment", true))
             {
                 path = RegGetValueExp(HKEY_LOCAL_MACHINE, @"SYSTEM\CurrentControlSet\Control\Session Manager\Environment", "Path");
+                envVars.DeleteValue("CSSCRIPT_INC", false);
                 envVars.DeleteValue("CSSCRIPT_DIR", false);
                 envVars.DeleteValue("CSSCRIPT_SHELLEX_DIR", false);
                 envVars.DeleteValue("css_nuget", false);
