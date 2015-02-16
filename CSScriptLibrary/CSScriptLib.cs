@@ -1302,7 +1302,9 @@ namespace CSScriptLibrary
                 while ((line = sr.ReadLine()) != null)
                 {
                     if (!headerProcessed && !line.TrimStart().StartsWith("using ")) //not using...; statement of the file header
-                        if (!line.StartsWith("//") && line.Trim() != "") //not comments or empty line
+                    {
+                        string trimmed = line.Trim();
+                        if (!trimmed.StartsWith("//") && trimmed != "") //not comments or empty line
                         {
                             headerProcessed = true;
 
@@ -1321,6 +1323,7 @@ namespace CSScriptLibrary
                             if (tokens[0] != "public" && tokens[1] != "public")
                                 code.Append("   public\r\n");
                         }
+                    }
 
                     code.Append(line);
                     code.Append("\r\n");
@@ -1689,6 +1692,36 @@ namespace CSScriptLibrary
         /// Note the script cache is always maintained by the script engine. The CacheEnabled property only indicates if the cached script should be used or not when CSScript.Load(...) method is called.
         /// </summary>
         public static bool CacheEnabled = true;
+
+        /// <summary>
+        /// The resolve source file algorithm.
+        /// <para>
+        /// The default algorithm searches for script file by given script name. Search order:
+        /// 1. Current directory
+        /// 2. extraDirs (usually %CSSCRIPT_DIR%\Lib and ExtraLibDirectory)
+        /// 3. PATH
+        /// Also fixes file name if user did not provide extension for script file (assuming .cs extension)
+        /// </para>
+        /// <para>If the default implementation isn't suitable then you can set <c>CSScript.ResolveSourceAlgorithm</c> 
+        /// to the alternative implementation of the probing algorithm.</para>
+        /// </summary>
+        public static ResolveSourceFileHandler ResolveSourceAlgorithm
+        {
+            get { return FileParser.ResolveFileAlgorithm; }
+            set { FileParser.ResolveFileAlgorithm = value; }
+        }
+
+        /// <summary>
+        /// Resolves namespace/assembly(file) name into array of assembly locations (local and GAC ones).
+        /// </summary>
+        /// <para>If the default implementation isn't suitable then you can set <c>CSScript.ResolveAssemblyAlgorithm</c> 
+        /// to the alternative implementation of the probing algorithm.</para>
+        /// <returns>collection of assembly file names where namespace is implemented</returns>
+        public static ResolveAssemblyHandler ResolveAssemblyAlgorithm
+        {
+            get { return AssemblyResolver.FindAssemblyAlgorithm; }
+            set { AssemblyResolver.FindAssemblyAlgorithm = value; }
+        }
 
         /// <summary>
         /// Cache of all loaded script files for the current process.

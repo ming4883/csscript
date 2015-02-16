@@ -369,6 +369,8 @@
             </summary>
             <param name="name">'namespace'/assembly(file) name</param>
             <param name="searchDirs">Assembly search directories</param>
+            <para>If the default implementation isn't suitable then you can set <c>CSScript.FindAssemblyAlgorithm</c> 
+            to the alternative implementation of the probing algorithm.</para>
             <returns>collection of assembly file names where namespace is implemented</returns>
         </member>
         <member name="M:CSScriptLibrary.AssemblyResolver.FindLocalAssembly(System.String,System.String)">
@@ -678,6 +680,23 @@
             <summary>
             If set to 'true' "static...Main" in the imported script is not renamed.
             </summary>
+        </member>
+        <member name="T:csscript.ResolveSourceFileHandler">
+            <summary>
+            Delegate implementing source file probing algorithm.
+            </summary>
+            <param name="file">The file.</param>
+            <param name="searchDirs">The extra dirs.</param>
+            <param name="throwOnError">if set to <c>true</c> [throw on error].</param>
+            <returns></returns>
+        </member>
+        <member name="T:csscript.ResolveAssemblyHandler">
+            <summary>
+            Delegate implementing assembly file probing algorithm.
+            </summary>
+            <param name="file">The file.</param>
+            <param name="searchDirs">The extra dirs.</param>
+            <returns></returns>
         </member>
         <member name="T:csscript.CSExecutor">
             <summary>

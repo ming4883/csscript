@@ -760,7 +760,7 @@ namespace Config
             this.ResumeLayout(false);
         }
 
-        static void SetEnvVarsIfUnderDev()
+        static void InitEnvVars()
         {
             #if DEBUG
             if (Environment.GetEnvironmentVariable("CSScriptDevPC") == "TRUE" && Environment.GetEnvironmentVariable("CSScriptRuntime") == null) //we are under visual studio
@@ -770,6 +770,11 @@ namespace Config
             }
 
             #endif
+            if (Environment.GetEnvironmentVariable("CSScriptRuntime") == null)
+            {
+                string version = Assembly.LoadFrom(GetCSSLibPath()).GetName().Version.ToString();
+                Environment.SetEnvironmentVariable("CSScriptRuntime", version);
+            }
         }
 
         static Assembly ResolveAsm(object sender, ResolveEventArgs args)
@@ -778,26 +783,38 @@ namespace Config
 
             if (args.Name.StartsWith("CSScriptLibrary"))
             {
-                string cssRootDir = CSScriptInstaller.GetEnvironmentVariable("CSSCRIPT_DIR");
-
-                if (cssRootDir == null)
-                {
-                    string twoDirsUp = Path.GetDirectoryName(
-                                           Path.GetDirectoryName(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)));
-
-                    if (File.Exists(Path.Combine(twoDirsUp, "css_config.exe")))
-                        cssRootDir = twoDirsUp;
-                }
-
-                string cssLib = Path.Combine(cssRootDir, @"Lib\CSScriptLibrary.dll");
+                string cssLib = GetCSSLibPath();
                 try
                 {
-                    retval = Assembly.LoadFrom(cssLib);
+                    if (cssLib != null)
+                        retval = Assembly.LoadFrom(cssLib);
                 }
                 catch { }
             }
 
             return retval;
+        }
+
+        static string GetCSSLibPath()
+        {
+            string cssRootDir = CSScriptInstaller.GetEnvironmentVariable("CSSCRIPT_DIR");
+
+            if (cssRootDir == null)
+            {
+                string twoDirsUp = Path.GetDirectoryName(
+                                       Path.GetDirectoryName(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)));
+
+                if (File.Exists(Path.Combine(twoDirsUp, "css_config.exe")))
+                    cssRootDir = twoDirsUp;
+            }
+
+            string cssLib = Path.Combine(cssRootDir, @"Lib\CSScriptLibrary.dll");
+            try
+            {
+                return cssLib;
+            }
+            catch { }
+            return null;
         }
 
         static internal bool IsAdmin()
@@ -810,6 +827,13 @@ namespace Config
         [STAThread]
         static public void Main(string[] args)
         {
+            //Debug.Assert(false);
+            AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(ResolveAsm);
+            main(args);
+        }
+
+        static public void main(string[] args)
+        {
             if (!IsAdmin())
             {
                 MessageBox.Show("You must have administrative privileges to run this application.", "CS-Script");
@@ -819,52 +843,54 @@ namespace Config
             if (Environment.Version.Major >= 2)
                 typeof(Application).GetMethod("EnableVisualStyles").Invoke(null, new object[0]);
 
-            SetEnvVarsIfUnderDev();
+            InitEnvVars();
 
             //System.Diagnostics.Debug.Assert(false);
-
-            AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(ResolveAsm);
 
             engineAsmName = Environment.GetEnvironmentVariable("CSScriptRuntimeLocation"); //name should be obtained here (it warranties that the calling assembly is the script engine but not the config.csc)
 
             if (args.Length == 1 && (args[0] == "?" || args[0] == "/?" || args[0] == "-?" || args[0].ToLower() == "help"))
+            {
                 Console.WriteLine("Usage: cscscript config [<options>]...\nThis script displays configures CS-Script or displays the configuration console.\n" +
                                   "Options:\n" +
                                   " /quiet | /q - Quiet mode, no user interaction\n" +
                                   " /nogui | /ng - No GUI mode" +
                                   " /new - do not reuse the settings of the CS-Script if already installed\n");
-            else
-                try
-            {
-                bool noGUI = false;
-                bool quiet = false;
-                bool update = true;
-                foreach (string arg in args)
-                    if (arg.ToLower() == "/nogui" || arg.ToLower() == "/ng")
-                        noGUI = true;
-                else if (arg.ToLower() == "/quiet" || arg.ToLower() == "/q")
-                        quiet = true;
-                else if (arg.ToLower() == "/new")
-                        update = false;
-
-                if (noGUI)
-                {
-                    bool alreadyIstalled = CSScriptInstaller.IsInstalled();
-                    new CSScriptInstaller(quiet, update);
-                    if (!alreadyIstalled)
-                    {
-                        if (noGUI)
-                            Console.WriteLine("CS-Scrip has been installed");
-                        else
-                            MessageBox.Show("CS-Scrip has been installed");
-                    }
-                }
-                else
-                    Application.Run(new ConfigForm(quiet, update));
             }
-            catch (Exception ex)
+            else
             {
-                MessageBox.Show(ex.ToString(), "CS-Script Configuration");
+                try
+                {
+                    bool noGUI = false;
+                    bool quiet = false;
+                    bool update = true;
+                    foreach (string arg in args)
+                        if (arg.ToLower() == "/nogui" || arg.ToLower() == "/ng")
+                            noGUI = true;
+                        else if (arg.ToLower() == "/quiet" || arg.ToLower() == "/q")
+                            quiet = true;
+                        else if (arg.ToLower() == "/new")
+                            update = false;
+
+                    if (noGUI)
+                    {
+                        bool alreadyIstalled = CSScriptInstaller.IsInstalled();
+                        new CSScriptInstaller(quiet, update);
+                        if (!alreadyIstalled)
+                        {
+                            if (noGUI)
+                                Console.WriteLine("CS-Scrip has been installed");
+                            else
+                                MessageBox.Show("CS-Scrip has been installed");
+                        }
+                    }
+                    else
+                        Application.Run(new ConfigForm(quiet, update));
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.ToString(), "CS-Script Configuration");
+                }
             }
         }
 
@@ -1386,29 +1412,30 @@ namespace Config
 
         public static void ReinstallShellExt()
         {
-            //CSScriptInstaller.RunApp(@"C:\Windows\SysWOW64\regsvr32.exe", @"/s /u ""C:\ProgramData\CS-Script\ShellExtension\2.8.0.0\CS-Script\ShellExt.cs.{25D84CB0-7345-11D3-A4A1-0080C8ECFED4}.dll""");
-            //CSScriptInstaller.RunApp(@"C:\Windows\System32\regsvr32.exe", @"/s /u ""C:\ProgramData\CS-Script\ShellExtension\2.8.0.0\CS-Script\ShellExt64.cs.{25D84CB0-7345-11D3-A4A1-0080C8ECFED4}.dll""");
-
-            //CSScriptInstaller.RunApp(@"C:\Windows\SysWOW64\regsvr32.exe", @"/s ""C:\ProgramData\CS-Script\ShellExtension\2.8.0.0\CS-Script\ShellExt.cs.{25D84CB0-7345-11D3-A4A1-0080C8ECFED4}.dll""");
-            //CSScriptInstaller.RunApp(@"C:\Windows\System32\regsvr32.exe", @"/s ""C:\ProgramData\CS-Script\ShellExtension\2.8.0.0\CS-Script\ShellExt64.cs.{25D84CB0-7345-11D3-A4A1-0080C8ECFED4}.dll""");
+            //Debug.Assert(false);
+            EnsureComShellExtensionPlacement();
 
             string dll = GetComShellExtRegisteredDll();
 
-            if (Directory.Exists(Environment.ExpandEnvironmentVariables(@"%windir%\SysWOW64")))
+            if (dll != null)
             {
-                string dll32 = dll.Replace("ShellExt64.", "ShellExt32.");
-                string dll64 = dll.Replace("ShellExt32.", "ShellExt64.");
+                if (Directory.Exists(Environment.ExpandEnvironmentVariables(@"%windir%\SysWOW64")))
+                {
+                    //dll will be the path to either ShellExt or ShellExt64 (depending which one registry search returns); both are in the same directory 
+                    string dll32 = dll.Replace("ShellExt64.", "ShellExt.");
+                    string dll64 = dll.Replace("ShellExt.", "ShellExt64.");
 
-                RunAppSafe(Environment.ExpandEnvironmentVariables(@"%windir%\SysWOW64\regsvr32.exe"), "/s /u \"" + dll32 + "\"");
-                RunAppSafe(Environment.ExpandEnvironmentVariables(@"%windir%\System32\regsvr32.exe"), "/s /u \"" + dll64 + "\"");
+                    RunAppSafe(Environment.ExpandEnvironmentVariables(@"%windir%\SysWOW64\regsvr32.exe"), "/s /u \"" + dll32 + "\"");
+                    RunAppSafe(Environment.ExpandEnvironmentVariables(@"%windir%\System32\regsvr32.exe"), "/s /u \"" + dll64 + "\"");
 
-                RunAppSafe(Environment.ExpandEnvironmentVariables(@"%windir%\SysWOW64\regsvr32.exe"), "/s \"" + comShellEtxDLL32 + "\"");
-                RunAppSafe(Environment.ExpandEnvironmentVariables(@"%windir%\System32\regsvr32.exe"), "/s \"" + comShellEtxDLL64 + "\"");
-            }
-            else
-            {
-                RunAppSafe(Environment.ExpandEnvironmentVariables(@"%windir%\System32\regsvr32.exe"), "/s /u \"" + dll + "\"");
-                RunAppSafe(Environment.ExpandEnvironmentVariables(@"%windir%\System32\regsvr32.exe"), "/s \"" + comShellEtxDLL32 + "\"");
+                    RunAppSafe(Environment.ExpandEnvironmentVariables(@"%windir%\SysWOW64\regsvr32.exe"), "/s \"" + comShellEtxDLL32 + "\"");
+                    RunAppSafe(Environment.ExpandEnvironmentVariables(@"%windir%\System32\regsvr32.exe"), "/s \"" + comShellEtxDLL64 + "\"");
+                }
+                else
+                {
+                    RunAppSafe(Environment.ExpandEnvironmentVariables(@"%windir%\System32\regsvr32.exe"), "/s /u \"" + dll + "\"");
+                    RunAppSafe(Environment.ExpandEnvironmentVariables(@"%windir%\System32\regsvr32.exe"), "/s \"" + comShellEtxDLL32 + "\"");
+                }
             }
         }
 
@@ -1448,9 +1475,9 @@ namespace Config
             {
                 if (IsComShellExtInstalled())
                     using (RegistryKey regKey = Registry.ClassesRoot.OpenSubKey(@"*\shellex\ContextMenuHandlers\CS-Script"))
-                {
-                    return (regKey != null);
-                }
+                    {
+                        return (regKey != null);
+                    }
             }
 
             return false;
@@ -1484,11 +1511,14 @@ namespace Config
             get
             {
                 var commonAppDir = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+
                 string retval = Path.Combine(commonAppDir, "CS-Script\\ShellExtension\\" + Environment.GetEnvironmentVariable("CSScriptRuntime") + "\\CS-Script");
 
                 return retval;
             }
         }
+
+
 
         static string ChooseDefaultProgramApp
         {
@@ -1507,8 +1537,9 @@ namespace Config
             {
                 Directory.CreateDirectory(comShellEtxDir);
 
-                string rootDir = Path.GetDirectoryName(comShellEtxDir);
-                CopyAllFiles(comShellEtxTemplateDir, rootDir); //this call will trigger the creation of the directory
+                //string rootDir = Path.GetDirectoryName(comShellEtxDir);
+                //CopyAllFiles(comShellEtxTemplateDir, rootDir); //this call will trigger the creation of the directory
+                CopyAllFiles(comShellEtxTemplateDir, comShellEtxDir); //this call will trigger the creation of the directory
             }
         }
 
@@ -1523,11 +1554,13 @@ namespace Config
                     Directory.CreateDirectory(destDir);
 
                 if (File.Exists(destFile))
+                {
                     try
                     {
                         File.Copy(srcFile, destFile, true);
                     }
-                    catch { } //shel extension file can be locked
+                    catch { } //shell extension file can be locked
+                }
                 else
                     File.Copy(srcFile, destFile);
             }
@@ -1556,7 +1589,7 @@ namespace Config
         {
             get
             {
-                return Path.Combine(comShellEtxDir, @"ShellExt64.cs.{25D84CB0-7345-11D3-A4A1-0080C8ECFED4}.dll");
+                return Path.Combine(comShellEtxDir, "ShellExt64.cs.{25D84CB0-7345-11D3-A4A1-0080C8ECFED4}.dll");
             }
         }
 
@@ -1583,6 +1616,7 @@ namespace Config
                 return Environment.OSVersion.Version >= Version.Parse("6.2");
             }
         }
+
         public static void ValidateShellExtensionsCompatibility()
         {
             if (KeyExists("VisualStudio.cs.11.0") && IsWin8OrHigher && string.Compare((string)GetKeyValue("CsScript", "CheckShellExtensionsCompatibility"), "false") != 0)
@@ -1630,7 +1664,7 @@ namespace Config
                 dialog.Controls.Add(textBox1);
                 dialog.Controls.Add(doNotShowAgain);
                 dialog.Text = title;
-                dialog.KeyPreview = true;;
+                dialog.KeyPreview = true; ;
                 dialog.FormBorderStyle = FormBorderStyle.SizableToolWindow;
                 dialog.StartPosition = FormStartPosition.CenterParent;
                 dialog.KeyDown += (sender, e) =>
@@ -1710,17 +1744,21 @@ namespace Config
                     {
                         string dll = GetComShellExtRegisteredDll();
 
-                        if (Directory.Exists(Environment.ExpandEnvironmentVariables(@"%windir%\SysWOW64")))
+                        if (dll != null)
                         {
-                            string dll32 = dll.Replace("ShellExt64.", "ShellExt32.");
-                            string dll64 = dll.Replace("ShellExt32.", "ShellExt64.");
+                            if (Directory.Exists(Environment.ExpandEnvironmentVariables(@"%windir%\SysWOW64")))
+                            {
+                                //dll will be the path to either ShellExt or ShellExt64 (depending which one registry search returns); both are in the same directory 
+                                string dll32 = dll.Replace("ShellExt64.", "ShellExt.");
+                                string dll64 = dll.Replace("ShellExt.", "ShellExt64.");
 
-                            RunApp(Environment.ExpandEnvironmentVariables(@"%windir%\SysWOW64\regsvr32.exe"), (silent ? "/s /u \"" : "/u \"") + dll32 + "\"");
-                            RunApp(Environment.ExpandEnvironmentVariables(@"%windir%\System32\regsvr32.exe"), (silent ? "/s /u \"" : "/u \"") + dll64 + "\"");
-                        }
-                        else
-                        {
-                            RunApp(Environment.ExpandEnvironmentVariables(@"%windir%\System32\regsvr32.exe"), (silent ? "/s /u \"" : "/u \"") + dll + "\"");
+                                RunApp(Environment.ExpandEnvironmentVariables(@"%windir%\SysWOW64\regsvr32.exe"), (silent ? "/s /u \"" : "/u \"") + dll32 + "\"");
+                                RunApp(Environment.ExpandEnvironmentVariables(@"%windir%\System32\regsvr32.exe"), (silent ? "/s /u \"" : "/u \"") + dll64 + "\"");
+                            }
+                            else
+                            {
+                                RunApp(Environment.ExpandEnvironmentVariables(@"%windir%\System32\regsvr32.exe"), (silent ? "/s /u \"" : "/u \"") + dll + "\"");
+                            }
                         }
                     }
                 }
@@ -1797,8 +1835,8 @@ namespace Config
                 using (RegistryKey envVars = Registry.LocalMachine.OpenSubKey("SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment", true)) { }
 
                 using (RegistryKey csReadOnly = Registry.ClassesRoot.OpenSubKey(".cs", false))
-                if (csReadOnly != null)
-                    using (RegistryKey csWritable = Registry.ClassesRoot.OpenSubKey(".cs", true)) { }
+                    if (csReadOnly != null)
+                        using (RegistryKey csWritable = Registry.ClassesRoot.OpenSubKey(".cs", true)) { }
             }
             catch
             {
@@ -1807,7 +1845,7 @@ namespace Config
 
             string scHomeDir = GetEnvironmentVariable("CSSCRIPT_DIR");
             bool preventMigration = false;
-            #if CSS_PROJECT
+#if CSS_PROJECT
             preventMigration = true; //we are running the script under VS
 #endif
             if (scHomeDir == null)
@@ -1825,6 +1863,7 @@ namespace Config
                     doubleClickAction = ConfigForm.DoubleClickNotepadAction;
 
                 scHomeDir = GetEnvironmentVariable("CSSCRIPT_DIR");
+                MergeUserIncluds(scHomeDir);
             }
             else if (string.Compare(GetExecutingEngineDir(), GetEnvironmentVariable("CSSCRIPT_DIR"), true) != 0 && !preventMigration)
             {
@@ -1843,7 +1882,7 @@ namespace Config
                     throw new Exception(msg + "Please run the configuration console from correct location.");
 
                 if (quiet || deadInstallationDetected ||
-                    DialogResult.OK == MessageBox.Show(msg +
+                    DialogResult.OK == ShowMessageBox(msg +
                     "Please, press Ok if you want to activate the script engine from '" + GetExecutingEngineDir() + "' instead of the currently installed one.",
                     "CS-Script Configuration", MessageBoxButtons.OKCancel, MessageBoxIcon.Information, MessageBoxDefaultButton.Button2))
                 {
@@ -1857,6 +1896,7 @@ namespace Config
                     this.ShellExtensionHasMoved = true;
 
                     scHomeDir = GetEnvironmentVariable("CSSCRIPT_DIR");
+                    MergeUserIncluds(scHomeDir);
                 }
                 else
                     throw new Exception("Operation cancelled by user.");
@@ -1940,6 +1980,57 @@ namespace Config
             }
         }
 
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        public static extern IntPtr FindWindow(string ClassName, string WindowText);
+
+        static DialogResult ShowMessageBox(string text, string caption, MessageBoxButtons buttons, MessageBoxIcon icon, MessageBoxDefaultButton defaultButton)
+        {
+            try
+            {
+                //it is very easy to get an invalid handle
+                IntPtr topMost = FindWindow(null, "CS-Script Config - Splash Screen");
+                return MessageBox.Show(new WindowWrapper(topMost), text, caption, buttons, icon, defaultButton);
+            }
+            catch
+            {
+                return MessageBox.Show(text, caption, buttons, icon, defaultButton);
+            }
+        }
+
+        public class WindowWrapper : System.Windows.Forms.IWin32Window
+        {
+            public WindowWrapper(IntPtr handle)
+            {
+                _hwnd = handle;
+            }
+
+            public IntPtr Handle
+            {
+                get { return _hwnd; }
+            }
+
+            private IntPtr _hwnd;
+        }
+
+        static void MergeUserIncluds(string scHomeDir)
+        {
+            string cssIncludesDir = Path.Combine(scHomeDir, "inc");
+            string userIncludesDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "CS-Script\\inc");
+
+            if (Directory.Exists(cssIncludesDir))
+            {
+                if (!Directory.Exists(userIncludesDir))
+                    Directory.CreateDirectory(userIncludesDir);
+
+                foreach (string srcFile in Directory.GetFiles(cssIncludesDir))
+                {
+                    string destFile = Path.Combine(userIncludesDir, Path.GetFileName(srcFile));
+                    if (!File.Exists(destFile))
+                        File.Copy(srcFile, destFile);
+                }
+            }
+        }
+
         public static string GetNotepadPP()
         {
             string nppPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), @"Notepad++\notepad++.exe");
@@ -1982,8 +2073,8 @@ namespace Config
                 doubleClickAction = "\"" + editor + "\" \"%1\"";
             else
 
-            //doubleClickAction = "notepad.exe \"%1\"";
-            doubleClickAction = ConfigForm.DoubleClickNotepadAction;
+                //doubleClickAction = "notepad.exe \"%1\"";
+                doubleClickAction = ConfigForm.DoubleClickNotepadAction;
 
             string scHomeDir = GetEnvironmentVariable("CSSCRIPT_DIR");
 
@@ -2113,14 +2204,15 @@ namespace Config
         public void Install(bool installShellExtension)
         {
             //System.Diagnostics.Debug.Assert(false);
+
             string path = "";
             using (RegistryKey envVars = Registry.LocalMachine.OpenSubKey("SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment", true))
             {
                 envVars.SetValue("CSSCRIPT_DIR", GetExecutingEngineDir());
-                
+
                 string nuGetCache = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "CS-Script", "nuget");
                 envVars.SetValue("css_nuget", nuGetCache);
-                
+
                 if (installShellExtension)
                 {
                     envVars.SetValue("CSSCRIPT_SHELLEX_DIR", comShellEtxDir);
@@ -2200,6 +2292,7 @@ namespace Config
                     csKey.SetValue("", csKey.GetValue("OldDefault").ToString());
                 }
             }
+
             int dwResult = 0;
             bool bResult = SendMessageTimeout((System.IntPtr)HWND_BROADCAST, WM_SETTINGCHANGE, 0, "Environment", SMTO_ABORTIFHUNG, 5000, dwResult);
 
@@ -2236,6 +2329,7 @@ namespace Config
                 Console.WriteLine(line);
                 Trace.WriteLine(line);
             }
+
             myProcess.WaitForExit();
             return sb.ToString();
         }
@@ -2250,6 +2344,7 @@ namespace Config
             {
                 Trace.WriteLine(e);
             }
+
             return "";
         }
 
@@ -2348,6 +2443,7 @@ namespace Config
                 Registry.ClassesRoot.CreateSubKey(name);
                 key = Registry.ClassesRoot.OpenSubKey(name, writable);
             }
+
             return key;
         }
 
@@ -2465,8 +2561,10 @@ namespace Config
                         elem.InsertBefore(newElem, elem.FirstChild);
                     }
                 }
+
                 break;
             }
+
             doc.Save(Path.Combine(HomeDir, filename));
         }
 
@@ -2519,6 +2617,7 @@ namespace Config
                     if (File.Exists(Path.Combine(dir, "system.dll")))
                         retval.Add(dir.Substring(Path.GetDirectoryName(dir).Length).Replace("\\", ""));
                 }
+
                 return (string[])retval.ToArray(typeof(string));
             }
         }
@@ -2562,6 +2661,7 @@ namespace Config
                         pathVal += pathDir + ";";
                     }
                 }
+
                 return pathVal;
             }
             else
@@ -2603,11 +2703,13 @@ namespace Config
                         return sb.ToString();
                 }
             }
+
             finally
             {
                 if (0 != hkey)
                     RegCloseKey(hkey);
             }
+
             return null;
         }
 
@@ -2627,11 +2729,13 @@ namespace Config
                     lResult = RegSetValueEx(hkey, valName, 0, 2, ref val, val.Length);
                 }
             }
+
             finally
             {
                 if (0 != hkey)
                     RegCloseKey(hkey);
             }
+
             return lResult;
         }
 
@@ -2702,7 +2806,7 @@ namespace Config
 
             string iconSpec = CSScriptInstaller.GetScriptIcon();
 
-            string[] parts = iconSpec.Split(",".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+            string[] parts = iconSpec.Split(", ".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
             textBox1.Text = parts[0];
 
             int index = 0;
@@ -2728,6 +2832,7 @@ namespace Config
             {
                 components.Dispose();
             }
+
             base.Dispose(disposing);
         }
 

@@ -324,8 +324,6 @@ namespace CSScriptLibrary
             return ResolveFile(fileName, extraDirs, _throwOnError);
         }
 
-        public delegate string ResolveFileHandler(string file, string[] extraDirs, bool throwOnError);
-
         /// <summary>
         /// The resolve file algorithm,
         /// <para>
@@ -336,7 +334,7 @@ namespace CSScriptLibrary
         /// Also fixes file name if user did not provide extension for script file (assuming .cs extension)
         /// </para>
         /// </summary>
-        public static ResolveFileHandler ResolveFileAlgorithm = ResolveFileDefault;
+        internal static ResolveSourceFileHandler ResolveFileAlgorithm = ResolveFileDefault;
 
         /// <summary>
         /// Searches for script file by given script name. Search order:
@@ -360,7 +358,7 @@ namespace CSScriptLibrary
         //    return result;
         //}
 
-        static string ResolveFileDefault(string file, string[] extraDirs, bool throwOnError)
+        internal static string ResolveFileDefault(string file, string[] extraDirs, bool throwOnError)
         {
             string retval = ResolveFile(file, extraDirs, "");
             if (retval == "")

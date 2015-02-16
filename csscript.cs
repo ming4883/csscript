@@ -63,6 +63,22 @@ using System.Diagnostics;
 using Microsoft.CSharp;
 namespace csscript
 {
+    /// <summary>
+    /// Delegate implementing source file probing algorithm.
+    /// </summary>
+    /// <param name="file">The file.</param>
+    /// <param name="searchDirs">The extra dirs.</param>
+    /// <param name="throwOnError">if set to <c>true</c> [throw on error].</param>
+    /// <returns></returns>
+    public delegate string ResolveSourceFileHandler(string file, string[] searchDirs, bool throwOnError);
+    /// <summary>
+    /// Delegate implementing assembly file probing algorithm.
+    /// </summary>
+    /// <param name="file">The file.</param>
+    /// <param name="searchDirs">The extra dirs.</param>
+    /// <returns></returns>
+    public delegate string[] ResolveAssemblyHandler(string file, string[] searchDirs);
+
     internal class Profiler
     {
         static public Stopwatch Stopwatch = new Stopwatch();

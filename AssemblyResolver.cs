@@ -247,13 +247,22 @@ namespace CSScriptLibrary
             return name.IndexOfAny(illegalChars) != -1;
         }
 
+        static internal ResolveAssemblyHandler FindAssemblyAlgorithm = DefaultFindAssemblyAlgorithm;
+
         /// <summary>
         /// Resolves namespace/assembly(file) name into array of assembly locations (local and GAC ones).
         /// </summary>
         /// <param name="name">'namespace'/assembly(file) name</param>
         /// <param name="searchDirs">Assembly search directories</param>
+        /// <para>If the default implementation isn't suitable then you can set <c>CSScript.FindAssemblyAlgorithm</c> 
+        /// to the alternative implementation of the probing algorithm.</para>
         /// <returns>collection of assembly file names where namespace is implemented</returns>
         static public string[] FindAssembly(string name, string[] searchDirs)
+        {
+            return FindAssemblyAlgorithm(name, searchDirs);
+        }
+
+        static string[] DefaultFindAssemblyAlgorithm(string name, string[] searchDirs)
         {
 #if net1
             ArrayList retval = new ArrayList();
@@ -305,7 +314,7 @@ namespace CSScriptLibrary
         /// <param name="name">namespace/assembly name</param>
         /// <param name="dir">directory</param>
         /// <returns>collection of assembly file names where namespace is implemented</returns>
-        static public string[] FindLocalAssembly(string name, string dir)
+        public static string[] FindLocalAssembly(string name, string dir)
         {
             //We are returning and array because name may represent assembly name or namespace
             //and as such can consist of more than one assembly file (multiple assembly file is not supported at this stage).
@@ -337,7 +346,7 @@ namespace CSScriptLibrary
         /// </summary>
         /// <param name="namespaceStr">'namespace' name</param>
         /// <returns>collection of assembly file names where namespace is implemented</returns>
-        static public string[] FindGlobalAssembly(String namespaceStr)
+        public static string[] FindGlobalAssembly(String namespaceStr)
         {
 #if net1
             ArrayList retval = new ArrayList();

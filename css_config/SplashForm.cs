@@ -95,6 +95,7 @@ public partial class SplashScreen : Form
             this.Name = "SplashScreen";
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+            this.Text = "CS-Script Config - Splash Screen";
             this.Deactivate += new System.EventHandler(this.SplashScreen_Deactivate);
             this.ResumeLayout(false);
             this.PerformLayout();

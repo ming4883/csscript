@@ -110,7 +110,6 @@ ECHO Building CSScriptLibrary.v4.0.dll: >> ..\Build\build.log
 "%net4_tools%\msbuild.exe" ..\CSScriptLibrary\CSScriptLibrary.v4.0.csproj /t:Rebuild /p:configuration=Release /verbosity:quiet
 ECHO ------------ >> ..\Build\build.log
 
-
 ECHO Building CSScriptLibrary.dll (unsigned): 
 ECHO Building CSScriptLibrary.dll (unsigned): >> ..\Build\build.log
 "%net4_tools%\csc.exe" /nologo %common_4_params%  /nowarn:169,1699,618 /define:CSSLib_BuildUnsigned /o /doc:CSScriptLibrary.xml /out:..\Build\temp\temp\CSScriptLibrary.dll /t:library %common_source_files% CSScriptLib.cs crc32.cs AsmHelper.cs ObjectCaster.cs Properties\AssemblyInfo.cs CSScriptLib.Eval.cs /r:..\Mono.CSharp.dll /r:"%net4_asms%\System.dll" /r:"%net4_asms%\System.Data.dll" /r:"%net4_asms%\System.Core.dll"  /r:"%net4_asms%\System.XML.dll" /r:"%net4_asms%\System.Windows.Forms.dll" >> ..\Build\build.log
@@ -122,9 +121,12 @@ ECHO Building CSScriptLibrary.dll: >> ..\Build\build.log
 "%net4_tools%\csc.exe" /nologo %common_4_params%  /nowarn:169,1699,618 /o /doc:CSScriptLibrary.xml /out:..\Build\temp\temp\CSScriptLibrary.dll /t:library %common_source_files% CSScriptLib.cs AsmHelper.cs ObjectCaster.cs Properties\AssemblyInfo.cs crc32.cs CSScriptLib.Eval.cs /r:..\Mono.CSharp.dll /r:"%net4_asms%\System.dll" /r:"%net4_asms%\System.Data.dll" /r:"%net4_asms%\System.XML.dll" /r:"%net4_asms%\System.Core.dll" /r:"%net4_asms%\System.Windows.Forms.dll" >> ..\Build\build.log
 ECHO ------------ >> ..\Build\build.log
 
+rem need to ensure ConfigConsole.cs doesn't contain "{ 25D84CB0", which is a formatting CSScript.Npp artefact 
+cscs.exe /l /nl "..\ConfigConsole\buildCheck.cs" >> ..\Build\build.log
+
 ECHO Building ConfigConsole.exe: 
 ECHO Building ConfigConsole.exe: >> ..\Build\build.log
-cscs.exe /l /ew "..\ConfigConsole\ConfigConsole.cs"
+cscs.exe /l /dbg /ew "..\ConfigConsole\ConfigConsole.cs"
 move ..\ConfigConsole\ConfigConsole.exe ..\Build\ConfigConsole.exe
 ECHO ------------ >> ..\Build\build.log
 
@@ -215,7 +217,6 @@ ECHO ------------ >> ..\Build\build.log
 ECHO Building CSSPostSharp.dll: >> ..\Build\build.log
 %windir%\Microsoft.NET\Framework\v3.5\csc /nologo /o /out:CSSPostSharp.dll /t:library ..\CSSPostSharp.cs /r:System.dll /r:System.Core.dll  >> build.log
 ECHO ------------ >> ..\Build\build.log
-
 
 copy CSSPostSharp.dll "%local_dev%\Lib\CSSPostSharp.dll"
 copy css.exe "%local_dev%\css.exe"
