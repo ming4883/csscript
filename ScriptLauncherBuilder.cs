@@ -131,7 +131,7 @@ namespace csscript
 
             compilerParams.IncludeDebugInformation = true;
 
-            bool debugLauncher = true;
+            bool debugLauncher = false;
             if (debugLauncher)
             {
                 compilerParams.CompilerOptions += " /d:DEBUG";
