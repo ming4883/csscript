@@ -12,9 +12,8 @@ using System.Runtime.InteropServices;
 #endif
 [assembly: AssemblyConfiguration("")]
 
-[assembly: AssemblyCompany("Galos")]
 [assembly: AssemblyProduct("C# Script engine")]
-[assembly: AssemblyCopyright("(C) 2004-2014 Oleg Shilo")]
+[assembly: AssemblyCopyright("(C) 2004-2015 Oleg Shilo")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -33,5 +32,5 @@ using System.Runtime.InteropServices;
 //      Build Number
 //      Revision
 //
-[assembly: AssemblyVersion("3.9.3.0")]
-[assembly: AssemblyFileVersion("3.9.3.0")]
+[assembly: AssemblyVersion("3.9.4.0")]
+[assembly: AssemblyFileVersion("3.9.4.0")]
