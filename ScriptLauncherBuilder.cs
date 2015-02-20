@@ -114,6 +114,14 @@ namespace csscript
                 if (File.Exists(asm)) //ignore GAC (not full path) assemblies 
                     refAssemblies += Assembly.ReflectionOnlyLoadFrom(asm).FullName + ":" + asm + ";";
 
+            compilerParams.ReferencedAssemblies.Clear(); //it is important to remove all asms as they can have absolute path to the wrong CLR asms branch
+            compilerParams.ReferencedAssemblies.Add("System.dll"); 
+
+            foreach (var item in compilerParams.ReferencedAssemblies)
+            {
+                Debug.WriteLine(item);
+            }
+
             string code = launcherCode
                                 .Replace("${REF_ASSEMBLIES}", refAssemblies)
                                 .Replace("${APPARTMENT}", appartment)
@@ -123,12 +131,12 @@ namespace csscript
 
             compilerParams.IncludeDebugInformation = true;
 
-            bool debugLauncher = false;
+            bool debugLauncher = true;
             if (debugLauncher)
             {
                 compilerParams.CompilerOptions += " /d:DEBUG";
 
-                string launcherFile = @"C:\Users\%USERNAME%\Desktop\New folder\script.launcher.cs";
+                string launcherFile = Environment.ExpandEnvironmentVariables(@"C:\Users\%USERNAME%\Desktop\New folder\script.launcher.cs");
                 File.WriteAllText(launcherFile, code);
                 retval = provider.CompileAssemblyFromFile(compilerParams, launcherFile);
             }
@@ -216,7 +224,7 @@ class Script
         {
             while (IsProcessRunning(parentHostProcess))
                 Thread.Sleep(500);
-            Process.GetCurrentProcess().Kill();
+            System.Diagnostics.Process.GetCurrentProcess().Kill();
         }
     }
 
@@ -224,11 +232,12 @@ class Script
     {
         try
         {
-            return Process.GetProcessById(parentHostProcess) != null;
+            return System.Diagnostics.Process.GetProcessById(parentHostProcess) != null;
         }
         catch { }
         return false;
     }
+
     static void InvokeStaticMain(Assembly compiledAssembly, string[] scriptArgs)
     {
         MethodInfo method = null;

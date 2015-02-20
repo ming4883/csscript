@@ -439,7 +439,7 @@ namespace Config
             this.repareBtn.Name = "repareBtn";
             this.repareBtn.Size = new System.Drawing.Size(72, 24);
             this.repareBtn.TabIndex = 5;
-            this.repareBtn.Text = "Repare";
+            this.repareBtn.Text = "Repair";
             this.toolTip1.SetToolTip(this.repareBtn, "Update all CS-Script settings with the current values");
             this.repareBtn.Click += new System.EventHandler(this.repareBtn_Click);
             // 

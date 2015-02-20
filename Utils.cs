@@ -1556,7 +1556,7 @@ namespace csscript
                 builder.Append("\n");
                 builder.Append("Alias - //css_ignore_ns\n");
                 builder.Append("\n");
-                builder.Append("namespace	- name of the namespace.\n");
+                builder.Append("namespace	- name of the namespace. Use '*' to completely disable namespace resolution\n");
                 builder.Append("\n");
                 builder.Append("This directive is used to prevent CS-Script from resolving the referenced namespace into assembly.\n");
                 builder.Append("------------------------------------\n");
