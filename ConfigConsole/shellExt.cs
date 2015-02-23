@@ -209,13 +209,21 @@ namespace CSSScript
             this.Close();
         }
 
+        public bool IsInstalled
+        {
+            get
+            {
+                return Environment.GetEnvironmentVariable("CSSCRIPT_SHELLEX_DIR") != null;
+            }
+        }
+
         string _baseDirectory;
         public string baseDirectory
         {
             get
             {
                 //System.Diagnostics.Debug.Assert(false);
-                return (_baseDirectory = Environment.ExpandEnvironmentVariables(@"%CSSCRIPT_SHELLEX_DIR%"));
+                return (_baseDirectory = Environment.ExpandEnvironmentVariables("%CSSCRIPT_SHELLEX_DIR%"));
             }
             set
             {
@@ -233,7 +241,9 @@ namespace CSSScript
         public void RefreshTreeView()
         {
             treeView1.Nodes.Clear();
-            ReadShellExtensions(baseDirectory);
+
+            if (IsInstalled)
+                ReadShellExtensions(baseDirectory);
 
             if (treeView1.Nodes.Count != 0)
                 treeView1.SelectedNode = treeView1.Nodes[0];

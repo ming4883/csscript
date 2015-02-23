@@ -111,6 +111,8 @@ namespace Config
 
         private void Init()
         {
+            //System.Diagnostics.Debug.Assert(false);
+
             InitializeComponent();
 
             if (installer.restrictedMode)
@@ -1142,7 +1144,6 @@ namespace Config
             Environment.SetEnvironmentVariable("ConfigConsoleLoaded", "true"); //loosely coupled notification as the progress SplashScreen can be in another assembly
 
             //SplashScreen.HideSplash();
-            //System.Diagnostics.Assert(false);
             advancedShellEx.Checked = CSScriptInstaller.IsComShellExtInstalled();
             allFilesAdvancedShellEx.Checked = CSScriptInstaller.IsComShellExtInstalledForAllFiles();
             allFilesAdvancedShellEx.Enabled = advancedShellEx.Checked;
@@ -1533,7 +1534,7 @@ namespace Config
 
         static void EnsureComShellExtensionPlacement()
         {
-            if (!Directory.Exists(comShellEtxDir))
+            if (!File.Exists(comShellEtxDLL32))
             {
                 Directory.CreateDirectory(comShellEtxDir);
 
@@ -1541,6 +1542,7 @@ namespace Config
                 //CopyAllFiles(comShellEtxTemplateDir, rootDir); //this call will trigger the creation of the directory
                 CopyAllFiles(comShellEtxTemplateDir, comShellEtxDir); //this call will trigger the creation of the directory
             }
+            //Environment.SetEnvironmentVariable(@"%CSSCRIPT_SHELLEX_DIR%", comShellEtxDir);
         }
 
         static void CopyAllFiles(string srcRootDir, string destRootDir)
@@ -1571,7 +1573,7 @@ namespace Config
             get
             {
                 if (GetEnvironmentVariable("CSSCRIPT_DIR") != null)
-                    return Path.Combine(GetEnvironmentVariable("CSSCRIPT_DIR"), @"Lib\ShellExtensions\Template");
+                    return Path.Combine(GetEnvironmentVariable("CSSCRIPT_DIR"), @"Lib\ShellExtensions\Template\CS-Script");
                 else
                     return "";
             }
@@ -2212,7 +2214,9 @@ namespace Config
                 envVars.SetValue("CSSCRIPT_DIR", GetExecutingEngineDir());
 
                 string nuGetCache = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "CS-Script", "nuget");
+                string includes = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "CS-Script", "inc");
                 envVars.SetValue("css_nuget", nuGetCache);
+                envVars.SetValue("CSSCRIPT_INC", includes);
 
                 if (installShellExtension)
                 {
@@ -2224,8 +2228,7 @@ namespace Config
                     envVars.DeleteValue("CSSCRIPT_SHELLEX_DIR", false);
                     Environment.SetEnvironmentVariable("CSSCRIPT_SHELLEX_DIR", null);
                 }
-
-                Environment.SetEnvironmentVariable("CSSCRIPT_INC", localIncludesDir); 
+                                
                 Environment.SetEnvironmentVariable("CSSCRIPT_DIR", GetExecutingEngineDir()); //for current process too
                 path = RegGetValueExp(HKEY_LOCAL_MACHINE, @"SYSTEM\CurrentControlSet\Control\Session Manager\Environment", "Path");
             }
@@ -2269,6 +2272,7 @@ namespace Config
                 envVars.DeleteValue("CSSCRIPT_DIR", false);
                 envVars.DeleteValue("CSSCRIPT_SHELLEX_DIR", false);
                 envVars.DeleteValue("css_nuget", false);
+                envVars.DeleteValue("CSSCRIPT_INC", false);
                 Environment.SetEnvironmentVariable("CSSCRIPT_SHELLEX_DIR", null);
             }
 
