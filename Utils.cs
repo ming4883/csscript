@@ -228,17 +228,8 @@ namespace csscript
                 catch { }
         }
 
-
-        /// <summary>
-        /// Waits for file idle.
-        /// </summary>
-        /// <param name="file">The file.</param>
-        /// <param name="delay">The delay.</param>
-        /// <returns>False if the file exists and still locked</returns>
         public static bool WaitForFileIdle(string file, int delay)
         {
-            if (file == null || !File.Exists(file)) return true;
-
             //very conservative "file in use" checker
             int start = Environment.TickCount;
             while ((Environment.TickCount - start) <= delay && IsFileLocked(file))
@@ -256,7 +247,7 @@ namespace csscript
             }
             catch (IOException e)
             {
-                int errorCode = Marshal.GetHRForException(e) & ((1 << 16) - 1);
+                var errorCode = Marshal.GetHRForException(e) & ((1 << 16) - 1);
 
                 return errorCode == 32 || errorCode == 33;
             }
@@ -370,6 +361,7 @@ namespace csscript
 
         internal static string GetScriptedCodeAttributeInjectionCode(string scriptFileName)
         {
+
             using (Mutex fileLock = Utils.FileLock(scriptFileName, "GetScriptedCodeAttributeInjectionCode"))
             {
                 //Infinite timeout is not good choice here as it may block forever but continuing while the file is still locked will 
@@ -380,6 +372,7 @@ namespace csscript
                 string currentCode = "";
                 string file = Path.Combine(CSExecutor.GetCacheDirectory(scriptFileName), Path.GetFileNameWithoutExtension(scriptFileName) + ".attr.g.cs");
 
+                Exception lastError = null;
 
                 for (int i = 0; i < 3; i++)
                 {
@@ -389,7 +382,7 @@ namespace csscript
                             using (StreamReader sr = new StreamReader(file))
                                 currentCode = sr.ReadToEnd();
 
-                        if (currentCode != code || true)
+                        if (currentCode != code)
                         {
                             string dir = Path.GetDirectoryName(file);
                             if (!Directory.Exists(dir))
@@ -402,9 +395,15 @@ namespace csscript
                         }
                         break;
                     }
-                    catch { }
+                    catch (Exception e)
+                    {
+                        lastError = e;
+                    }
                     Thread.Sleep(200);
                 }
+
+                if (!File.Exists(file))
+                    throw new ApplicationException("Failed to create AttributeInjection file", lastError);
 
                 return file;
             }
