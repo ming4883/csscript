@@ -152,7 +152,7 @@ namespace csscript
                 options.openEndDirectiveSyntax = settings.OpenEndDirectiveSyntax;
                 options.cleanupShellCommand = settings.ExpandCleanupShellCommand();
                 options.doCleanupAfterNumberOfRuns = settings.DoCleanupAfterNumberOfRuns;
-                options.inMemoryAsm = settings.InMemoryAsssembly;
+                options.inMemoryAsm = settings.InMemoryAssembly;
 
                 //options.useSurrogateHostingProcess = settings.UseSurrogateHostingProcess;
                 options.hideCompilerWarnings = settings.HideCompilerWarnings;
@@ -721,24 +721,17 @@ namespace csscript
                         CSSUtils.VerbosePrint("", options);
                     }
 
-                    bool fileUnlocked = false;
+                    bool compilingFileUnlocked = false;
                     //Infinite timeout is not good choice here as it may block forever but continuing while the file is still locked will
                     //throw a nice informative exception.
 
-                    string mutexName = "Process." + CSSUtils.GetHashCodeEx(options.scriptFileName).ToString();
-
-                    using (Mutex fileLock = new Mutex(false, mutexName))
+                    using (Mutex validatingFileLock = Utils.FileLock(options.scriptFileName, "TimestampValidating"))
+                    using (Mutex compilingFileLock = Utils.FileLock(options.scriptFileName, "Compiling"))
+                    using (Mutex executingFileLock = Utils.FileLock(options.scriptFileName, "Executing")) //will need it in the future for more accurate concurrency control 
                         try
                         {
-                            //infinite is not good here as it may block forever but continuing while the file is still locked will
-                            //throw a nice informative exception
-
-                            fileLock.WaitOne(3000, false); //let other thread/process (if any) to finish loading/compiling the same file; 3 seconds should be enough, if you need more use more sophisticated synchronization
-
-                            //Thread.Sleep(3000);
-                            //Trace.WriteLine(">>>  Waited  " + (Environment.TickCount - start));
-
-                            //compile
+                            //validate
+                            bool availableForChecking = validatingFileLock.WaitOne(-1, false);
                             string assemblyFileName = options.useCompiled ? GetAvailableAssembly(options.scriptFileName) : null;
 
                             if (options.useCompiled && options.useSmartCaching)
@@ -754,10 +747,15 @@ namespace csscript
 
                             if (options.forceCompile && assemblyFileName != null)
                             {
+                                bool lockedByCompiler = !compilingFileLock.WaitOne(3000, false);
+                                //no need to act on lockedByCompiler as FileDelete will throw the exception
+
                                 Utils.FileDelete(assemblyFileName, true);
                                 assemblyFileName = null;
                             }
 
+                            if (assemblyFileName != null)
+                                Utils.ReleaseFileLock(validatingFileLock); //OK, there is a compiled script file and it is current 
 
                             //add searchDirs to PATH to support search path for native dlls
                             //need to do this before compilation or execution
@@ -769,14 +767,29 @@ namespace csscript
 #else
                             Environment.SetEnvironmentVariable("PATH", path);
 #endif
-
                             //it is possible that there are fully compiled/cached and up to date script but no host compiled yet
                             string host = ScriptLauncherBuilder.GetLauncherName(assemblyFileName);
                             bool surrogateHostMissing = (options.useSurrogateHostingProcess &&
                                 (!File.Exists(host) || !CSSUtils.HaveSameTimestamp(host, assemblyFileName)));
 
+
+                            //compile
                             if (options.buildExecutable || !options.useCompiled || (options.useCompiled && assemblyFileName == null) || options.forceCompile || surrogateHostMissing)
                             {
+                                //infinite is not good here as it may block forever but continuing while the file is still locked will
+                                //throw a nice informative exception
+                                bool lockedByCompiler = !compilingFileLock.WaitOne(3000, false);
+                                bool lockedByHost = !executingFileLock.WaitOne(3000, false);
+
+                                if (!lockedByHost)
+                                {
+                                    //!lockedByHost means that if there is a host executing the assemblyFileName script it has finished the execution 
+                                    //but the assemblyFileName file itself may still be locked by the IO because it's host process may be just exiting
+                                    Utils.WaitForFileIdle(assemblyFileName, 1000);
+                                }
+
+                                //no need to act on lockedByCompiler/lockedByHost as Compile(...) will throw the exception
+
                                 try
                                 {
                                     CSSUtils.VerbosePrint("Compiling script...", options);
@@ -787,6 +800,9 @@ namespace csscript
                                     Profiler.Stopwatch.Start();
 
                                     assemblyFileName = Compile(options.scriptFileName);
+
+
+                                    Debug.WriteLine("Asm is compiled");
 
                                     if (Profiler.Stopwatch.IsRunning)
                                     {
@@ -806,9 +822,9 @@ namespace csscript
                                 }
                                 finally
                                 {
-                                    try { fileLock.ReleaseMutex(); }
-                                    catch { }
-                                    fileUnlocked = true;
+                                    Utils.ReleaseFileLock(validatingFileLock);
+                                    Utils.ReleaseFileLock(compilingFileLock);
+                                    compilingFileUnlocked = true;
                                 }
                             }
                             else
@@ -844,7 +860,6 @@ namespace csscript
                                     }
 
 
-
                                     if (options.useCompiled || options.cleanupShellCommand != "")
                                     {
                                         AssemblyResolver.CacheProbingResults = true; //it is reasonable safe to do the aggressive probing as we are executing only a single script (standalone execution not a script hosting model)
@@ -853,7 +868,7 @@ namespace csscript
                                         //I am just reusing some functionality of the RemoteExecutor class.
 
                                         RemoteExecutor executor = new RemoteExecutor(options.searchDirs);
-                                        executor.ExecuteAssembly(assemblyFileName, scriptArgs);
+                                        executor.ExecuteAssembly(assemblyFileName, scriptArgs, executingFileLock);
                                     }
                                     else
                                     {
@@ -914,8 +929,12 @@ namespace csscript
                         }
                         finally
                         {
-                            try { if (!fileUnlocked) fileLock.ReleaseMutex(); } //using fileUnlocked to avoid throwing unnecessary exception
-                            catch { }
+                            //strictly speaking releasing isn't needed as the 'using' block ensures the mutex is released
+                            //though some .NET versions/implementations may not do this.
+                            
+                            if (!compilingFileUnlocked) //avoid throwing unnecessary exception
+                                Utils.ReleaseFileLock(compilingFileLock);
+                            Utils.ReleaseFileLock(executingFileLock);
                         }
                 }
             }

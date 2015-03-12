@@ -410,7 +410,7 @@ namespace csscript
         /// true - script assembly will be loaded as a file. It is an equivalent of Assembly.Load(byte[] rawAssembly)
         /// </summary>
         [Category("RuntimeSettings"), Description("Indicates the script assembly is to be loaded by CLR as an in-memory byte stream instead of the file.")]
-        public bool InMemoryAsssembly
+        public bool InMemoryAssembly
         {
             get { return inMemoryAsm; }
             set { inMemoryAsm = value; }

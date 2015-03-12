@@ -212,6 +212,63 @@ namespace csscript
             FileDelete(path, false);
         }
 
+        public static Mutex FileLock(string file, object context)
+        {
+            if (!IsLinux())
+                file = file.ToLower(CultureInfo.InvariantCulture);
+
+            string mutexName = context.ToString() + "." + CSSUtils.GetHashCodeEx(file).ToString();
+            return new Mutex(false, mutexName);
+        }
+
+        public static void ReleaseFileLock(Mutex @lock)
+        {
+            if (@lock != null)
+                try { @lock.ReleaseMutex(); }
+                catch { }
+        }
+
+
+        /// <summary>
+        /// Waits for file idle.
+        /// </summary>
+        /// <param name="file">The file.</param>
+        /// <param name="delay">The delay.</param>
+        /// <returns>False if the file exists and still locked</returns>
+        public static bool WaitForFileIdle(string file, int delay)
+        {
+            if (file == null || !File.Exists(file)) return true;
+
+            //very conservative "file in use" checker
+            int start = Environment.TickCount;
+            while ((Environment.TickCount - start) <= delay && IsFileLocked(file))
+            {
+                Thread.Sleep(200);
+            }
+            return IsFileLocked(file);
+        }
+
+        static bool IsFileLocked(string file)
+        {
+            try
+            {
+                using (File.Open(file, FileMode.Open)) { }
+            }
+            catch (IOException e)
+            {
+                var errorCode = Marshal.GetHRForException(e) & ((1 << 16) - 1);
+
+                return errorCode == 32 || errorCode == 33;
+            }
+
+            return false;
+        }
+
+        public static Mutex FileLock(string file)
+        {
+            return FileLock(file, "");
+        }
+
         public static void FileDelete(string path, bool rethrow)
         {
             //There are the reports about 
@@ -232,7 +289,7 @@ namespace csscript
                         throw;
                 }
 
-                Thread.Sleep(200);
+                Thread.Sleep(300);
             }
         }
 
@@ -313,7 +370,7 @@ namespace csscript
 
         internal static string GetScriptedCodeAttributeInjectionCode(string scriptFileName)
         {
-            using (Mutex fileLock = new Mutex(false, "GetScriptedCodeAttributeInjectionCode." + CSSUtils.GetHashCodeEx(scriptFileName).ToString()))
+            using (Mutex fileLock = Utils.FileLock(scriptFileName, "GetScriptedCodeAttributeInjectionCode"))
             {
                 //Infinite timeout is not good choice here as it may block forever but continuing while the file is still locked will 
                 //throw a nice informative exception.
@@ -323,30 +380,30 @@ namespace csscript
                 string currentCode = "";
                 string file = Path.Combine(CSExecutor.GetCacheDirectory(scriptFileName), Path.GetFileNameWithoutExtension(scriptFileName) + ".attr.g.cs");
 
-                if (File.Exists(file))
-                    using (StreamReader sr = new StreamReader(file))
-                        currentCode = sr.ReadToEnd();
 
-                if (currentCode != code)
+                for (int i = 0; i < 3; i++)
                 {
-                    string dir = Path.GetDirectoryName(file);
-                    if (!Directory.Exists(dir))
-                        Directory.CreateDirectory(dir);
-
-                    for (int i = 0; i < 3; i++)
+                    try
                     {
-                        try
+                        if (File.Exists(file))
+                            using (StreamReader sr = new StreamReader(file))
+                                currentCode = sr.ReadToEnd();
+
+                        if (currentCode != code || true)
                         {
+                            string dir = Path.GetDirectoryName(file);
+                            if (!Directory.Exists(dir))
+                                Directory.CreateDirectory(dir);
+
                             using (StreamWriter sw = new StreamWriter(file)) //there were reports about the files being locked. Possibly by csc.exe so allow retry
                             {
                                 sw.Write(code);
                             }
-
-                            break;
                         }
-                        catch { }
-                        Thread.Sleep(200);
+                        break;
                     }
+                    catch { }
+                    Thread.Sleep(200);
                 }
 
                 return file;
@@ -1495,7 +1552,7 @@ namespace csscript
                 builder.Append("\n");
                 builder.Append("Downloads/Installs the NuGet package. It also automatically references the downloaded package assemblies.\n");
                 builder.Append("If automatic referencing isn't desired use '-noref' switch.\n");
-                builder.Append("Note : package is not downloaded again if it was already downloaded.\n"); 
+                builder.Append("Note : package is not downloaded again if it was already downloaded.\n");
                 builder.Append(" Example: //css_nuget cs-script;\n This directive will install CS-Script NuGet package.\n");
                 builder.Append("------------------------------------\n");
                 builder.Append("//css_args arg0[,arg1]..[,argN];\n");

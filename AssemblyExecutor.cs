@@ -36,6 +36,7 @@ using System;
 using System.IO;
 using System.Reflection;
 using CSScriptLibrary;
+using System.Threading;
 
 namespace csscript
 {
@@ -120,6 +121,11 @@ namespace csscript
 
         public void ExecuteAssembly(string filename, string[] args)
         {
+            ExecuteAssembly(filename, args, null);
+        }
+
+        public void ExecuteAssembly(string filename, string[] args, Mutex asmLock)
+        {
             AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(ResolveEventHandler);
             AppDomain.CurrentDomain.ResourceResolve += new ResolveEventHandler(ResolveResEventHandler); //xaml
 
@@ -148,6 +154,8 @@ namespace csscript
                     else
                         assembly = Assembly.Load(data);
                 }
+
+                Utils.ReleaseFileLock(asmLock);
             }
             InvokeStaticMain(assembly, args);
         }
