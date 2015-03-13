@@ -247,7 +247,7 @@ namespace csscript
             }
             catch (IOException e)
             {
-                var errorCode = Marshal.GetHRForException(e) & ((1 << 16) - 1);
+                int errorCode = Marshal.GetHRForException(e) & ((1 << 16) - 1);
 
                 return errorCode == 32 || errorCode == 33;
             }
