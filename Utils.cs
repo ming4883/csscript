@@ -228,8 +228,16 @@ namespace csscript
                 catch { }
         }
 
+        /// <summary>
+        /// Waits for file idle.
+        /// </summary>
+        /// <param name="file">The file.</param>
+        /// <param name="delay">The delay.</param>
+        /// <returns><c>true</c> if the wait is successful.</returns>
         public static bool WaitForFileIdle(string file, int delay)
         {
+            if (file == null || !File.Exists(file)) return true;
+
             //very conservative "file in use" checker
             int start = Environment.TickCount;
             while ((Environment.TickCount - start) <= delay && IsFileLocked(file))
