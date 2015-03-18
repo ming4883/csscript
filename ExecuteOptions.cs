@@ -62,7 +62,7 @@ namespace csscript
     /// </summary>
     internal class ExecuteOptions : ICloneable
     {
-        public static ExecuteOptions options;
+        public static ExecuteOptions options = new ExecuteOptions();
 
         public ExecuteOptions()
         {

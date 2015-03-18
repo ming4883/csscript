@@ -519,7 +519,7 @@ namespace CSScriptLibrary
         }
 
         /// <summary>
-        /// Specialised version of GetMethodInvoker which returns MethodDelegate thus you do not need to specify
+        /// Specialized version of GetMethodInvoker which returns MethodDelegate thus you do not need to specify
         /// object instance (null) when calling static methods.
         /// </summary>
         /// <param name="methodName">'Method' name including 'Type' name (eg. MyType.DoJob). It is allowed to use wild
@@ -549,7 +549,7 @@ namespace CSScriptLibrary
         }
 
         /// <summary>
-        /// Specialised version of GetMethodInvoker which returns MethodDelegate thus you do not need to specify
+        /// Specialized version of GetMethodInvoker which returns MethodDelegate thus you do not need to specify
         /// object instance (null) when calling static methods.
         /// </summary>
         /// <param name="methodName">'Method' name including 'Type' name (eg. MyType.DoJob). It is allowed to use wild
@@ -617,7 +617,7 @@ namespace CSScriptLibrary
 
         /// <summary>
         /// Creates an instance of AsmHelper for working with assembly dynamically loaded to non-current AppDomain.
-        /// This method initialises instance and creates new ('remote') AppDomain with 'domainName' name. New AppDomain is automatically unloaded as result of "disposable" behaviour of AsmHelper.
+        /// This method initializes instance and creates new ('remote') AppDomain with 'domainName' name. New AppDomain is automatically unloaded as result of "disposable" behaviour of AsmHelper.
         /// </summary>
         /// <param name="asmFile">File name of the assembly to be loaded.</param>
         /// <param name="domainName">Name of the domain to be created.</param>
@@ -767,7 +767,7 @@ namespace CSScriptLibrary
         }
 
         /// <summary>
-        /// Implementation of IDisposable.Dispose(). Disposes allocated exetrnal resources if any. Call this method to unload non-current AppDomain (if it was created).
+        /// Implementation of IDisposable.Dispose(). Disposes allocated external resources if any. Call this method to unload non-current AppDomain (if it was created).
         /// </summary>
         public void Dispose()
         {
@@ -908,15 +908,12 @@ namespace CSScriptLibrary
 
         bool customHashing;
 
-        public bool CustomHashing
+        internal bool CustomHashing
         {
             get { return customHashing; }
             set
             {
                 customHashing = value;
-                if (ExecuteOptions.options == null)
-                    ExecuteOptions.options = new ExecuteOptions();
-
                 ExecuteOptions.options.customHashing = value;
             }
         }
@@ -1094,6 +1091,9 @@ namespace CSScriptLibrary
             if (asm == null)
                 throw new ArgumentNullException("asm");
 
+            if (ExecuteOptions.options == null)
+                ExecuteOptions.options = new ExecuteOptions();
+
             this.asm = asm;
 
             try
@@ -1117,13 +1117,6 @@ namespace CSScriptLibrary
         }
 
         string[] probingDirs = new string[] { };
-
-        bool customHash = true;
-        public bool CustomHash
-        {
-            get { return customHash; }
-            set { customHash = value; }
-        }
 
         public bool CachingEnabled
         {
