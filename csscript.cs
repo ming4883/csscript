@@ -1694,6 +1694,18 @@ namespace csscript
             }
         }
 
+        static internal string GetScriptTempFile(string subDir)
+        {
+            lock (typeof(CSExecutor))
+            {
+                string tempDir = Path.Combine(GetScriptTempDir(), subDir);
+                if (!Directory.Exists(tempDir))
+                    Directory.CreateDirectory(tempDir);
+
+                return Path.Combine(tempDir, Guid.NewGuid() + ".tmp");
+            }
+        }
+
         /// <summary>
         /// Returns the name of the temporary folder in the CSSCRIPT subfolder of Path.GetTempPath().
         /// <para>Under certain circumstances it may be desirable to the use the alternative location for the CS-Script temporary files.

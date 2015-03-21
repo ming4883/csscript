@@ -369,7 +369,6 @@ namespace csscript
 
         internal static string GetScriptedCodeAttributeInjectionCode(string scriptFileName)
         {
-
             using (Mutex fileLock = Utils.FileLock(scriptFileName, "GetScriptedCodeAttributeInjectionCode"))
             {
                 //Infinite timeout is not good choice here as it may block forever but continuing while the file is still locked will 

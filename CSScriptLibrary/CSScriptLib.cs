@@ -1459,12 +1459,16 @@ namespace CSScriptLibrary
                         }
                 }
 
-                string tempFile = CSExecutor.GetScriptTempFile();
+                string tempFile = CSExecutor.GetScriptTempFile("dynamic");
                 if (tempFileExtension != null && tempFileExtension != "")
                     tempFile = Path.ChangeExtension(tempFile, tempFileExtension);
 
                 try
                 {
+                    Mutex fileLock = new Mutex(false, tempFile.Replace(Path.DirectorySeparatorChar, '|').ToLower());
+                    fileLock.WaitOne(1); //do not release mutex. The file may be needed to be to locked until the 
+                    //host process exits (e.g. debugging). Thus the mutex will be released by OS when the process is terminated
+
                     using (StreamWriter sw = new StreamWriter(tempFile))
                     {
                         sw.Write(scriptText);
