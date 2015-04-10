@@ -1554,12 +1554,15 @@ namespace csscript
                 builder.Append("This directive is used to inject one script into another at compile time. Thus code from one script can be exercised in another one.\n");
                 builder.Append("'Rename' clause can appear in the directive multiple times.\n");
                 builder.Append("------------------------------------\n");
-                builder.Append("//css_nuget [-noref] package0[,package1]..[,packageN];\n");
+                builder.Append("//css_nuget [-noref] [-ng:<nuget arguments>] package0[,package1]..[,packageN];\n");
                 builder.Append("\n");
                 builder.Append("Downloads/Installs the NuGet package. It also automatically references the downloaded package assemblies.\n");
-                builder.Append("If automatic referencing isn't desired use '-noref' switch.\n");
+                builder.Append("If automatic referencing isn't desired use '-noref' switch for individual packages.\n");
+                builder.Append("You can also pass NuGet arguments for every individual package.\n");
                 builder.Append("Note : package is not downloaded again if it was already downloaded.\n");
-                builder.Append(" Example: //css_nuget cs-script;\n This directive will install CS-Script NuGet package.\n");
+                builder.Append(" Example: //css_nuget cs-script;\n");
+                builder.Append("          //css_nuget -noref  -ng:\"-IncludePrerelease –version 1.0beta\" cs-script;\n");
+                builder.Append("This directive will install CS-Script NuGet package.\n");
                 builder.Append("------------------------------------\n");
                 builder.Append("//css_args arg0[,arg1]..[,argN];\n");
                 builder.Append("\n");
@@ -1805,7 +1808,6 @@ namespace csscript
             return new string[0];
         }
 #else
-
             if (!Utils.IsLinux())
             {
                 List<string> assemblies = new List<string>();
@@ -1813,11 +1815,26 @@ namespace csscript
                 bool promptPrinted = false;
                 foreach (string item in packages)
                 {
+                    // //css_nuget -noref -ng:"-IncludePrerelease –version 1.0beta" cs-script
+
                     string package = item;
+                    string nugetArgs = "";
 
                     bool supressReferencing = item.StartsWith("-noref");
                     if (supressReferencing)
                         package = item.Replace("-noref", "").Trim();
+
+                    int nameStart = package.LastIndexOf(" ");
+                    if (nameStart != null)
+                    {
+                        if (package.StartsWith("-ng:"))
+                        {
+                            nugetArgs = package.Substring(0, nameStart).Replace("-ng:", "").Trim();
+                            if (nugetArgs.StartsWith("\"") && nugetArgs.EndsWith("\""))
+                                nugetArgs = nugetArgs.Substring(1, nugetArgs.Length-2);
+                        }
+                        package = package.Substring(nameStart).Trim();
+                    }
 
                     string packageDir = Path.Combine(NuGetCache, package);
 
@@ -1838,7 +1855,7 @@ namespace csscript
 
                             try
                             {
-                                Run(NuGetExe, "install " + package + " -OutputDirectory " + packageDir);
+                                Run(NuGetExe, "install " + package + " " + nugetArgs + " -OutputDirectory " + packageDir);
                             }
                             catch { }
                         }

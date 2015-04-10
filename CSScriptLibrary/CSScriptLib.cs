@@ -1955,6 +1955,8 @@ namespace csscript
         /// <summary>
         /// The full name of the script file being executed.
         /// </summary>
+        [Obsolete("This member may not work correctly in the hosted and cached scenarios. Use alternative techniques demonstrated in the ReflectScript.cs sample."+
+            "Including environment variable 'EntryScript' and AssemblyDescriptionAttribute (of the script assembly) containing the full path of the script file.")]
         public static string ScriptFile
         {
             get
@@ -1970,8 +1972,10 @@ namespace csscript
 
         /// <summary>
         /// The full name of the primary script file being executed. Usually it is the same file as ScriptFile.
-        /// However these fields are different if analysed from the pre/post-script.
+        /// However these fields are different if analyzed from the pre/post-script.
         /// </summary>
+        [Obsolete("This member may not work correctly in the hosted and cached scenarios. Use alternative techniques demonstrated in the ReflectScript.cs sample."+
+            "Including environment variable 'EntryScript' and AssemblyDescriptionAttribute (of the script assembly) containing the full path of the script file.")]
         public static string PrimaryScriptFile
         {
             get
