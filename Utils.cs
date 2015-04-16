@@ -686,6 +686,7 @@ namespace csscript
             contextData["NewReferences"] = context.NewReferences;
             contextData["NewIncludes"] = context.NewIncludes;
             contextData["SearchDirs"] = context.SearchDirs;
+            contextData["ConsoleEncoding"] = options.consoleEncoding;
 
 #if net1
             System.Collections.Hashtable precompilers = CSSUtils.LoadPrecompilers(options);
@@ -1825,7 +1826,7 @@ namespace csscript
                         package = item.Replace("-noref", "").Trim();
 
                     int nameStart = package.LastIndexOf(" ");
-                    if (nameStart != null)
+                    if (nameStart != -1)
                     {
                         if (package.StartsWith("-ng:"))
                         {

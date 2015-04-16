@@ -114,7 +114,7 @@ namespace csscript
         /// <returns></returns>
         static public string Process(string code, out int injectionPos, out int injectionLength)
         {
-            return AutoclassPrecompiler.Process(code, out injectionPos, out injectionLength);
+            return AutoclassPrecompiler.Process(code, out injectionPos, out injectionLength, ConsoleEncoding);
         }
 
         /// <summary>
@@ -132,6 +132,11 @@ namespace csscript
                 position += injectionLength;
             return retval;
         }
+
+        /// <summary>
+        /// The console encoding to be set for at the script initialization.
+        /// </summary>
+        static public string ConsoleEncoding = "utf-8";
     }
 
     internal class AutoclassPrecompiler// : IPrecompiler
@@ -148,11 +153,11 @@ namespace csscript
 
             int injectionPos;
             int injectionLength;
-            content = AutoclassPrecompiler.Process(content, out injectionPos, out injectionLength);
+            content = AutoclassPrecompiler.Process(content, out injectionPos, out injectionLength, (string)context["ConsoleEncoding"]);
             return true;
         }
 
-        public static string Process(string content, out int injectionPos, out int injectionLength)
+        internal static string Process(string content, out int injectionPos, out int injectionLength, string consoleEncoding)
         {
             int entryPointInjectionPos = -1;
             injectionPos = -1;
@@ -205,7 +210,7 @@ namespace csscript
                                     string entryPointDefinition = "static int Main(string[] args) { ";
                                     if (noReturn)
                                     {
-                                        entryPointDefinition += "try { System.Console.OutputEncoding = System.Text.Encoding.UTF8; } catch { } new ScriptClass().main(" + actualArgs + "); return 0;";
+                                        entryPointDefinition += "try { System.Console.OutputEncoding = System.Text.Encoding.GetEncoding(\"" + consoleEncoding + "\"); } catch { } new ScriptClass().main(" + actualArgs + "); return 0;";
                                     }
                                     else
                                     {

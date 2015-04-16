@@ -185,6 +185,7 @@ namespace csscript
             }
             if (method != null)
             {
+                //System.Diagnostics.Debug.Assert(false);
                 object retval = null;
                 if (method.GetParameters().Length != 0)
                     retval = method.Invoke(new object(), new object[] { (Object)scriptArgs });

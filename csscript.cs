@@ -116,10 +116,10 @@ namespace csscript
         }
 
 #if net1
-        private Settings GetPersistedSettings(ArrayList appArgs)
+        Settings GetPersistedSettings(ArrayList appArgs)
 #else
 
-        private Settings GetPersistedSettings(List<string> appArgs)
+        Settings GetPersistedSettings(List<string> appArgs)
 #endif
 
         {
@@ -150,6 +150,7 @@ namespace csscript
                 options.apartmentState = settings.DefaultApartmentState;
                 options.reportDetailedErrorInfo = settings.ReportDetailedErrorInfo;
                 options.openEndDirectiveSyntax = settings.OpenEndDirectiveSyntax;
+                options.consoleEncoding = settings.ConsoleEncoding;
                 options.cleanupShellCommand = settings.ExpandCleanupShellCommand();
                 options.doCleanupAfterNumberOfRuns = settings.DoCleanupAfterNumberOfRuns;
                 options.inMemoryAsm = settings.InMemoryAssembly;
@@ -213,6 +214,8 @@ namespace csscript
                     //The following will also update corresponding "options" members from "settings" data
                     Settings settings = GetPersistedSettings(appArgs);
 
+
+
                     //process original command-line arguments
                     if (options.scriptFileName == "")
                     {
@@ -222,16 +225,13 @@ namespace csscript
 
                     for (int i = firstScriptArg; i < args.Length; i++)
                     {
-                        if (args[i].Trim().Length != 0)
+                        if (i == args.Length - 1 && string.Compare(args[args.Length - 1], "//x", true, CultureInfo.InvariantCulture) == 0)
                         {
-                            if (i == args.Length - 1 && string.Compare(args[args.Length - 1], "//x", true, CultureInfo.InvariantCulture) == 0)
-                            {
-                                options.startDebugger = true;
-                                options.DBG = true;
-                            }
-                            else
-                                appArgs.Add(args[i]);
+                            options.startDebugger = true;
+                            options.DBG = true;
                         }
+                        else
+                            appArgs.Add(args[i]);
                     }
 #if net1
                     scriptArgs = (string[])appArgs.ToArray(typeof(string));
@@ -638,7 +638,7 @@ namespace csscript
         /// <summary>
         /// Dummy 'print' to suppress displaying application messages.
         /// </summary>
-        private static void VoidPrint(string msg)
+        static void VoidPrint(string msg)
         {
         }
 
@@ -679,7 +679,7 @@ namespace csscript
         /// <summary>
         /// This method implements compiling and execution of the script.
         /// </summary>
-        private void ExecuteImpl()
+        void ExecuteImpl()
         {
             try
             {
@@ -732,6 +732,8 @@ namespace csscript
                         {
                             //validate
                             bool availableForChecking = validatingFileLock.WaitOne(-1, false);
+
+                            //GetAvailableAssembly also checks timestamps
                             string assemblyFileName = options.useCompiled ? GetAvailableAssembly(options.scriptFileName) : null;
 
                             if (options.useCompiled && options.useSmartCaching)
@@ -931,7 +933,7 @@ namespace csscript
                         {
                             //strictly speaking releasing isn't needed as the 'using' block ensures the mutex is released
                             //though some .NET versions/implementations may not do this.
-                            
+
                             if (!compilingFileUnlocked) //avoid throwing unnecessary exception
                                 Utils.ReleaseFileLock(compilingFileLock);
                             Utils.ReleaseFileLock(executingFileLock);
@@ -1088,7 +1090,7 @@ namespace csscript
             return retval;
         }
 
-        private class UniqueAssemblyLocations
+        class UniqueAssemblyLocations
         {
             public static explicit operator string[](UniqueAssemblyLocations obj)
             {
@@ -1118,7 +1120,7 @@ namespace csscript
             System.Collections.Hashtable locations = new System.Collections.Hashtable();
         }
 
-        private ICodeCompiler LoadDefaultCompiler()
+        ICodeCompiler LoadDefaultCompiler()
         {
 #pragma warning disable 618
 #if net1
@@ -1131,7 +1133,7 @@ namespace csscript
 #pragma warning restore 618
         }
 
-        private ICodeCompiler LoadCompiler(string scriptFileName, ref string[] filesToInject)
+        ICodeCompiler LoadCompiler(string scriptFileName, ref string[] filesToInject)
         {
             ICodeCompiler compiler;
 
@@ -1149,11 +1151,12 @@ namespace csscript
             {
                 try
                 {
-                    Assembly asm;
+                    Assembly asm = null;
                     if (Path.IsPathRooted(options.altCompiler))
                     {
                         //absolute path
-                        asm = Assembly.LoadFrom(options.altCompiler);
+                        if (File.Exists(options.altCompiler))
+                            asm = Assembly.LoadFrom(options.altCompiler);
                     }
                     else
                     {
@@ -1235,7 +1238,7 @@ namespace csscript
         }
 
 
-        private void AddReferencedAssemblies(CompilerParameters compilerParams, string scriptFileName, ScriptParser parser)
+        void AddReferencedAssemblies(CompilerParameters compilerParams, string scriptFileName, ScriptParser parser)
         {
             //scriptFileName is obsolete as it is now can be obtained from parser (ScriptParser.ScriptPath)
             string[] asms = AggregateReferencedAssemblies(parser);
@@ -1351,7 +1354,7 @@ namespace csscript
             return (string[])requestedRefAsms;
         }
 
-        private string NormalizeGacAssemblyPath(string asm)
+        string NormalizeGacAssemblyPath(string asm)
         {
             //e.g. v3.5
             string currentFramework = string.Format("v{0}.{1}", Environment.Version.Major, Environment.Version.MajorRevision);
@@ -1375,7 +1378,7 @@ namespace csscript
         /// <summary>
         /// Compiles C# script file.
         /// </summary>
-        private string Compile(string scriptFileName)
+        string Compile(string scriptFileName)
         {
             //System.Diagnostics.Debug.Assert(false);
             bool generateExe = options.buildExecutable;
@@ -1583,12 +1586,12 @@ namespace csscript
 
             if (options.useSurrogateHostingProcess)
             {
-                new ScriptLauncherBuilder().BuildSurrogateLauncher(assemblyFileName, options.TargetFramework, compilerParams, options.apartmentState);
+                new ScriptLauncherBuilder().BuildSurrogateLauncher(assemblyFileName, options.TargetFramework, compilerParams, options.apartmentState, options.consoleEncoding);
             }
             return assemblyFileName;
         }
 
-        private CompilerResults CompileAssembly(ICodeCompiler compiler, CompilerParameters compilerParams, string[] filesToCompile)
+        CompilerResults CompileAssembly(ICodeCompiler compiler, CompilerParameters compilerParams, string[] filesToCompile)
         {
             CompilerResults retval = compiler.CompileAssemblyFromFileBatch(compilerParams, filesToCompile);
 
@@ -1619,7 +1622,7 @@ namespace csscript
             return retval;
         }
 
-        private void ProcessCompilingResult(CompilerResults results, CompilerParameters compilerParams, ScriptParser parser, string scriptFileName, string assemblyFileName, string[] additionalDependencies)
+        void ProcessCompilingResult(CompilerResults results, CompilerParameters compilerParams, ScriptParser parser, string scriptFileName, string assemblyFileName, string[] additionalDependencies)
         {
             LastCompileResult = results;
 
@@ -1680,7 +1683,7 @@ namespace csscript
         internal CompilerResults LastCompileResult;
 
         [DllImport("kernel32.dll", SetLastError = true)]
-        private static extern uint GetTempFileName(string lpPathName, string lpPrefixString, uint uUnique, [Out] StringBuilder lpTempFileName);
+        static extern uint GetTempFileName(string lpPathName, string lpPrefixString, uint uUnique, [Out] StringBuilder lpTempFileName);
 
         /// <summary>
         /// Returns the name of the temporary file in the CSSCRIPT subfolder of Path.GetTempPath().
@@ -1789,7 +1792,7 @@ namespace csscript
             cacheDir = newCacheDir;
         }
 
-        private static string cacheDir = "";
+        static string cacheDir = "";
 
         /// <summary>
         /// Prints Help info.

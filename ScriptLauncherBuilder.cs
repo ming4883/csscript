@@ -73,7 +73,7 @@ namespace csscript
         // + when starting remove css and //x args 
         //+ try to solve limitations with console Input redurectionlimi
         //+ ensure launcher is not build when building dll/exe without execution
-        public string BuildSurrogateLauncher(string scriptAssembly, string tragetFramework, CompilerParameters compilerParams, ApartmentState appartmentState)
+        public string BuildSurrogateLauncher(string scriptAssembly, string tragetFramework, CompilerParameters compilerParams, ApartmentState appartmentState, string consoleEncoding)
         {
             //Debug.Assert(false);
 #if !net4
@@ -125,6 +125,7 @@ namespace csscript
             string code = launcherCode
                                 .Replace("${REF_ASSEMBLIES}", refAssemblies)
                                 .Replace("${APPARTMENT}", appartment)
+                                .Replace("${CONSOLE_ENCODING}", consoleEncoding)
                                 .Replace("${ASM_MANE}", Path.GetFileName(scriptAssembly));
 
             CompilerResults retval;
@@ -164,7 +165,7 @@ class Script
     ${APPARTMENT}
     static public int Main(string[] args)
     {
-        try { Console.OutputEncoding = System.Text.Encoding.UTF8; } catch {}
+        try { Console.OutputEncoding = System.Text.Encoding.GetEncoding(""${CONSOLE_ENCODING}""); } catch {}
         try
         {
             AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(CurrentDomain_AssemblyResolve);

@@ -98,6 +98,7 @@ namespace csscript
             clone.buildWinExecutable = this.buildWinExecutable;
             clone.useSurrogateHostingProcess = this.useSurrogateHostingProcess;
             clone.altCompiler = this.altCompiler;
+            clone.consoleEncoding= this.consoleEncoding;
             clone.preCompilers = this.preCompilers;
             clone.postProcessor = this.postProcessor;
             clone.compilerOptions = this.compilerOptions;
@@ -211,6 +212,7 @@ namespace csscript
         public bool openEndDirectiveSyntax = true;
         public bool useSurrogateHostingProcess = false;
         public string altCompiler = "";
+        public string consoleEncoding = "utf-8";
         public string preCompilers = "";
         public string defaultRefAssemblies = "";
         public string postProcessor = "";

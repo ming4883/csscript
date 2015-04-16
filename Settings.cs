@@ -51,6 +51,7 @@ using System.Drawing.Design;
 #endif
 
 using System.ComponentModel;
+using System.Diagnostics;
 
 namespace csscript
 {
@@ -83,7 +84,7 @@ namespace csscript
         /// <returns>shell command string</returns>
         public string ExpandCleanupShellCommand() { return Environment.ExpandEnvironmentVariables(cleanupShellCommand); }
 
-        private string cleanupShellCommand = "";
+        string cleanupShellCommand = "";
 
         /// <summary>
         /// This value indicates frequency of the custom cleanup
@@ -96,7 +97,7 @@ namespace csscript
             set { doCleanupAfterNumberOfRuns = value; }
         }
 
-        private uint doCleanupAfterNumberOfRuns = 30;
+        uint doCleanupAfterNumberOfRuns = 30;
 
         /// <summary>
         /// Location of alternative code provider assembly. If set it forces script engine to use an alternative code compiler.
@@ -117,7 +118,7 @@ namespace csscript
         /// <returns>Path string</returns>
         public string ExpandUseAlternativeCompiler() { return Environment.ExpandEnvironmentVariables(useAlternativeCompiler); }
 
-        private string useAlternativeCompiler = "";
+        string useAlternativeCompiler = "";
 
         /// <summary>
         /// Location of PostProcessor assembly. If set it forces script engine to pass compiled script through PostProcessor before the execution.
@@ -138,7 +139,7 @@ namespace csscript
         /// <returns>Path string</returns>
         public string ExpandUsePostProcessor() { return Environment.ExpandEnvironmentVariables(usePostProcessor); }
 
-        private string usePostProcessor = "";
+        string usePostProcessor = "";
 
         /// <summary>
         /// DefaultApartmentState is an ApartmemntState, which will be used
@@ -151,7 +152,7 @@ namespace csscript
             set { defaultApartmentState = value; }
         }
 
-        private ApartmentState defaultApartmentState = ApartmentState.STA;
+        ApartmentState defaultApartmentState = ApartmentState.STA;
 
         /// <summary>
         /// Default command-line arguments. For example if "/dbg" is specified all scripts will be compiled in debug mode
@@ -164,7 +165,7 @@ namespace csscript
             set { defaultArguments = value; }
         }
 
-        private string defaultArguments = CSSUtils.cmdFlagPrefix + "c " + CSSUtils.cmdFlagPrefix + "sconfig " + CSSUtils.cmdFlagPrefix + "co:" + CSSUtils.cmdFlagPrefix + "warn:0";
+        string defaultArguments = CSSUtils.cmdFlagPrefix + "c " + CSSUtils.cmdFlagPrefix + "sconfig " + CSSUtils.cmdFlagPrefix + "co:" + CSSUtils.cmdFlagPrefix + "warn:0";
 
         ///// <summary>
         ///// Enables using a surrogate process to host the script engine at runtime. This may be a useful option for fine control over the hosting process
@@ -177,7 +178,7 @@ namespace csscript
         //    set { useSurrogatepHostingProcess = value; }
         //}
 
-        private bool useSurrogatepHostingProcess = false;
+        bool useSurrogatepHostingProcess = false;
 
         bool openEndDirectiveSyntax = true;
 
@@ -189,6 +190,26 @@ namespace csscript
         {
             get { return openEndDirectiveSyntax; }
             set { openEndDirectiveSyntax = value; }
+        }
+
+        string consoleEncoding = "utf-8";
+        /// <summary>
+        /// Encoding of he Console Output. Applicable for console applications script engine only.
+        /// </summary>
+        public string ConsoleEncoding
+        {
+            get { return consoleEncoding; }
+            set
+            {
+                if (consoleEncoding != value)
+                try
+                {
+                    Console.OutputEncoding = System.Text.Encoding.GetEncoding(value);
+                }
+                catch { };
+
+                consoleEncoding = value;
+            }
         }
 
         /// <summary>
@@ -206,9 +227,9 @@ namespace csscript
         }
 
 #if net35
-        private string targetFramework = "v3.5";
+        string targetFramework = "v3.5";
 #else
-        private string targetFramework = "v4.0";
+        string targetFramework = "v4.0";
 #endif
 
         /// <summary>
@@ -236,7 +257,7 @@ namespace csscript
             set { defaultRefAssemblies = value; }
         }
 
-        private string defaultRefAssemblies = "System.Core; System.Linq;";
+        string defaultRefAssemblies = "System.Core; System.Linq;";
 
         /// <summary>
         /// Returns value of the DefaultRefAssemblies (with expanding environment variables).
@@ -255,7 +276,7 @@ namespace csscript
             set { searchDirs = value; }
         }
 
-        private string searchDirs = "%CSSCRIPT_DIR%" + Path.DirectorySeparatorChar + "Lib;%CSSCRIPT_INC%;";
+        string searchDirs = "%CSSCRIPT_DIR%" + Path.DirectorySeparatorChar + "Lib;%CSSCRIPT_INC%;";
 
         /// <summary>
         /// Add search directory to the search (probing) path Settings.SearchDirs.
@@ -284,7 +305,7 @@ namespace csscript
             set { hideOptions = value; }
         }
 
-        private string precompiler = "";
+        string precompiler = "";
 
         /// <summary>
         /// Path to the precompiller script/assembly (see documentation for details). You can specify multiple recompiles separating them by semicolon.
@@ -321,21 +342,21 @@ namespace csscript
             set { customHashing = value; }
         }
 
-        private HideOptions hideOptions = HideOptions.HideMostFiles;
+        HideOptions hideOptions = HideOptions.HideMostFiles;
         ///// <summary>
         ///// The value, which indicates which version of CLR compiler should be used to compile script.
         ///// For example CLR 2.0 can use the following compiler versions:
         ///// default - .NET 2.0
         ///// 3.5 - .NET 3.5
         ///// Use empty string for default compiler.
-        ///// </summary>private string compilerVersion = "";
+        ///// </summary>string compilerVersion = "";
         //[Category("RuntimeSettings")]
         //public string CompilerVersion
         //{
         //    get { return compilerVersion; }
         //    set { compilerVersion = value; }
         //}
-        //private string compilerVersion = "";
+        //string compilerVersion = "";
 
         /// <summary>
         /// Enum for possible hide auto-generated files scenarios
@@ -387,7 +408,7 @@ namespace csscript
             set { optimisticConcurrencyModel = value; }
         }
 
-        private bool optimisticConcurrencyModel = true;
+        bool optimisticConcurrencyModel = true;
 
         /// <summary>
         /// Boolean flag that indicates if compiler warnings should be included in script compilation output.
@@ -401,7 +422,7 @@ namespace csscript
             set { hideCompilerWarnings = value; }
         }
 
-        private bool hideCompilerWarnings = false;
+        bool hideCompilerWarnings = false;
 
         /// <summary>
         /// Boolean flag that indicates the script assembly is to be loaded by CLR as an in-memory byte stream instead of the file.
@@ -416,7 +437,7 @@ namespace csscript
             set { inMemoryAsm = value; }
         }
 
-        private bool inMemoryAsm = false;
+        bool inMemoryAsm = false;
 
         /// <summary>
         /// Saves CS-Script application settings to a file (.dat).
@@ -442,6 +463,7 @@ namespace csscript
                 doc.DocumentElement.AppendChild(doc.CreateElement("hideCompilerWarnings")).AppendChild(doc.CreateTextNode(hideCompilerWarnings.ToString()));
                 doc.DocumentElement.AppendChild(doc.CreateElement("inMemoryAsm")).AppendChild(doc.CreateTextNode(inMemoryAsm.ToString()));
                 doc.DocumentElement.AppendChild(doc.CreateElement("TragetFramework")).AppendChild(doc.CreateTextNode(TargetFramework));
+                doc.DocumentElement.AppendChild(doc.CreateElement("ConsoleEncoding")).AppendChild(doc.CreateTextNode(ConsoleEncoding));
                 doc.DocumentElement.AppendChild(doc.CreateElement("defaultRefAssemblies")).AppendChild(doc.CreateTextNode(defaultRefAssemblies));
                 doc.DocumentElement.AppendChild(doc.CreateElement("useSurrogatepHostingProcess")).AppendChild(doc.CreateTextNode(useSurrogatepHostingProcess.ToString()));
                 doc.DocumentElement.AppendChild(doc.CreateElement("openEndDirectiveSyntax")).AppendChild(doc.CreateTextNode(openEndDirectiveSyntax.ToString()));
@@ -457,7 +479,7 @@ namespace csscript
         /// Loads CS-Script application settings from a file. Default settings object is returned if it cannot be loaded from the file.
         /// </summary>
         /// <param name="fileName">File name of the XML file</param>
-        /// <returns>Setting object desterilized from the XML file</returns>
+        /// <returns>Setting object deserilized from the XML file</returns>
         public static Settings Load(string fileName)
         {
             return Load(fileName, true);
@@ -496,6 +518,7 @@ namespace csscript
                     settings.OpenEndDirectiveSyntax = data.SelectSingleNode("openEndDirectiveSyntax").InnerText.ToLower() == "true";
                     settings.Precompiler = data.SelectSingleNode("Precompiler").InnerText;
                     settings.CustomHashing = data.SelectSingleNode("CustomHashing").InnerText.ToLower() == "true";
+                    settings.ConsoleEncoding = data.SelectSingleNode("ConsoleEncoding").InnerText;
                 }
                 catch
                 {
