@@ -196,19 +196,23 @@ namespace csscript
         /// <summary>
         /// Encoding of he Console Output. Applicable for console applications script engine only.
         /// </summary>
+        [Category("RuntimeSettings"), Description("Console output encoding. The behavior can be overwritten by environment variable CSSCRIPT_CONSOLE_ENCODING_OVERWRITE")]
         public string ConsoleEncoding
         {
             get { return consoleEncoding; }
             set
             {
                 if (consoleEncoding != value)
-                try
                 {
-                    Console.OutputEncoding = System.Text.Encoding.GetEncoding(value);
-                }
-                catch { };
+                    consoleEncoding = value;
 
-                consoleEncoding = value;
+                    string overwtiteValue = Utils.GetConsoleEncodingOverwrite();
+                    if (overwtiteValue != null)
+                        consoleEncoding = overwtiteValue;
+
+                    try { Console.OutputEncoding = System.Text.Encoding.GetEncoding(consoleEncoding); }
+                    catch { }
+                }
             }
         }
 

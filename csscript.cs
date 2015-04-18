@@ -704,6 +704,12 @@ namespace csscript
                     {
                         CSSUtils.VerbosePrint("> ----------------", options);
                         CSSUtils.VerbosePrint("  TragetFramework: " + options.TargetFramework, options);
+                        try
+                        {
+                            CSSUtils.VerbosePrint(string.Format("  Console Encoding: {0} ({1})", Console.OutputEncoding.WebName, Console.OutputEncoding.EncodingName), options);
+                        }
+                        catch{} //will fail for windows app
+                        
                         CSSUtils.VerbosePrint("  CurrentDirectory: " + Environment.CurrentDirectory, options);
                         if (!Utils.IsLinux())
                         {

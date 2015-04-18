@@ -60,9 +60,10 @@ namespace csscript
         /// </summary>
         static void Main(string[] rawArgs)
         {
-            Console.OutputEncoding = System.Text.Encoding.UTF8;
+            //Debug.Assert(false);
+            SetInitialConsoleEncoding();
 
-            //work around of nusty Win7x64 problem.
+            //work around of nasty Win7x64 problem.
             //http://superuser.com/questions/527728/cannot-resolve-windir-cannot-modify-path-or-path-being-reset-on-boot
             if (Environment.GetEnvironmentVariable("windir") == null)
                 Environment.SetEnvironmentVariable("windir", Environment.GetEnvironmentVariable("SystemRoot"));
@@ -207,6 +208,16 @@ namespace csscript
             }
 
             return sb.ToString();
+        }
+
+        static void SetInitialConsoleEncoding()
+        {
+            string consoleEncoding = Utils.GetConsoleEncodingOverwrite();
+            if (consoleEncoding == null)
+                Console.OutputEncoding = System.Text.Encoding.UTF8;
+            else if (!consoleEncoding.Equals("default", StringComparison.OrdinalIgnoreCase))
+                try { Console.OutputEncoding = System.Text.Encoding.GetEncoding(consoleEncoding); }
+                catch { }
         }
 #if net4
         static void RunConsoleApp(string app, string args)

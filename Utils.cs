@@ -228,6 +228,11 @@ namespace csscript
                 catch { }
         }
 
+        public static string GetConsoleEncodingOverwrite()
+        {
+            return Environment.GetEnvironmentVariable("CSSCRIPT_CONSOLE_ENCODING_OVERWRITE");
+        }
+
         /// <summary>
         /// Waits for file idle.
         /// </summary>
@@ -1562,7 +1567,7 @@ namespace csscript
                 builder.Append("You can also pass NuGet arguments for every individual package.\n");
                 builder.Append("Note : package is not downloaded again if it was already downloaded.\n");
                 builder.Append(" Example: //css_nuget cs-script;\n");
-                builder.Append("          //css_nuget -noref  -ng:\"-IncludePrerelease –version 1.0beta\" cs-script;\n");
+                builder.Append("          //css_nuget -noref  -ng:\"-IncludePrerelease -version 1.0beta\" cs-script;\n");
                 builder.Append("This directive will install CS-Script NuGet package.\n");
                 builder.Append("------------------------------------\n");
                 builder.Append("//css_args arg0[,arg1]..[,argN];\n");
