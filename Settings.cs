@@ -33,8 +33,8 @@
 #endregion Licence...
 
 using System;
+using System.Collections.Generic;
 using System.IO;
-
 #if net1
 using System.Collections;
 #else
@@ -43,15 +43,14 @@ using System.Collections;
 
 using System.Threading;
 using System.Xml;
-
+using System.Drawing.Design;
 #if !InterfaceAssembly
 
-using System.Drawing.Design;
 
 #endif
 
 using System.ComponentModel;
-using System.Diagnostics;
+using System.Text;
 
 namespace csscript
 {
@@ -192,16 +191,19 @@ namespace csscript
             set { openEndDirectiveSyntax = value; }
         }
 
-        string consoleEncoding = "utf-8";
+
+        string consoleEncoding = "default";
         /// <summary>
         /// Encoding of he Console Output. Applicable for console applications script engine only.
         /// </summary>
-        [Category("RuntimeSettings"), Description("Console output encoding. The behavior can be overwritten by environment variable CSSCRIPT_CONSOLE_ENCODING_OVERWRITE")]
+        [Category("RuntimeSettings"), Description("Console output encoding. Use 'default' value if you want to use system default encoding.")]
+        [TypeConverter(typeof(EncodingConverter))]
         public string ConsoleEncoding
         {
             get { return consoleEncoding; }
             set
             {
+                //consider: https://social.msdn.microsoft.com/Forums/vstudio/en-US/e448b241-e250-4dcb-8ecd-361e00920dde/consoleoutputencoding-breaks-batch-files?forum=netfxbcl 
                 if (consoleEncoding != value)
                 {
                     consoleEncoding = value;
@@ -537,4 +539,37 @@ namespace csscript
             return settings;
         }
     }
+
+    internal class EncodingConverter : TypeConverter
+    {
+        public EncodingConverter()
+        {
+            encodings.Add("default");
+            foreach (EncodingInfo item in Encoding.GetEncodings())
+                encodings.Add(item.Name);
+        }
+
+        List<string> encodings = new List<string>();
+
+        public override bool GetStandardValuesSupported(ITypeDescriptorContext context)
+        {
+            return true;
+        }
+
+        public override StandardValuesCollection GetStandardValues(ITypeDescriptorContext context)
+        {
+            return new StandardValuesCollection(encodings);
+        }
+
+        public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
+        {
+            return true;
+        }
+
+        public override object ConvertFrom(ITypeDescriptorContext context, System.Globalization.CultureInfo culture, object value)
+        {
+            return value;
+        }
+    }
+
 }

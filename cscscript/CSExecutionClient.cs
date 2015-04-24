@@ -60,119 +60,127 @@ namespace csscript
         /// </summary>
         static void Main(string[] rawArgs)
         {
-            //Debug.Assert(false);
-            SetInitialConsoleEncoding();
-
-            //work around of nasty Win7x64 problem.
-            //http://superuser.com/questions/527728/cannot-resolve-windir-cannot-modify-path-or-path-being-reset-on-boot
-            if (Environment.GetEnvironmentVariable("windir") == null)
-                Environment.SetEnvironmentVariable("windir", Environment.GetEnvironmentVariable("SystemRoot"));
-
-            Profiler.Stopwatch.Start();
-
-            string[] args = rawArgs;
-
-            //Debug.Assert(false);
-
-            if (Utils.IsLinux())
-            {
-                //because Linux shebang does not properly split arguments we need to take care of this
-                //http://www.daniweb.com/software-development/c/threads/268382
-                List<string> tempArgs = new List<string>();
-                foreach (string arg in rawArgs)
-                    if (arg.StartsWith(CSSUtils.cmdFlagPrefix))
-                    {
-                        foreach (string subArg in arg.Split(CSSUtils.cmdFlagPrefix.ToCharArray()))
-                            if (subArg.Trim() != "")
-                                tempArgs.Add(CSSUtils.cmdFlagPrefix + subArg.Trim());
-                    }
-                    else
-                        tempArgs.Add(arg);
-
-                args = tempArgs.ToArray();
-            }
-
+            Encoding originalEncoding = Console.OutputEncoding;
             try
             {
-                SetEnvironmentVariable("CSScriptRuntime", System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString());
-                SetEnvironmentVariable("CSScriptRuntimeLocation", System.Reflection.Assembly.GetExecutingAssembly().Location);
-            }
-            catch { } //SetEnvironmentVariable will always throw an exception on Mono
+                //Debug.Assert(false);
+                SetInitialConsoleEncoding();
 
-            CSExecutor exec = new CSExecutor();
+                //work around of nasty Win7x64 problem.
+                //http://superuser.com/questions/527728/cannot-resolve-windir-cannot-modify-path-or-path-being-reset-on-boot
+                if (Environment.GetEnvironmentVariable("windir") == null)
+                    Environment.SetEnvironmentVariable("windir", Environment.GetEnvironmentVariable("SystemRoot"));
 
-            if (AppDomain.CurrentDomain.FriendlyName != "ExecutionDomain") // AppDomain.IsDefaultAppDomain is more appropriate but it is not available in .NET 1.1
-            {
-                string configFile = exec.GetCustomAppConfig(args);
-                if (configFile != "")
+                Profiler.Stopwatch.Start();
+
+                string[] args = rawArgs;
+
+                //Debug.Assert(false);
+
+                if (Utils.IsLinux())
                 {
-                    AppDomainSetup setup = AppDomain.CurrentDomain.SetupInformation;
-                    setup.ConfigurationFile = configFile;
+                    //because Linux shebang does not properly split arguments we need to take care of this
+                    //http://www.daniweb.com/software-development/c/threads/268382
+                    List<string> tempArgs = new List<string>();
+                    foreach (string arg in rawArgs)
+                        if (arg.StartsWith(CSSUtils.cmdFlagPrefix))
+                        {
+                            foreach (string subArg in arg.Split(CSSUtils.cmdFlagPrefix.ToCharArray()))
+                                if (subArg.Trim() != "")
+                                    tempArgs.Add(CSSUtils.cmdFlagPrefix + subArg.Trim());
+                        }
+                        else
+                            tempArgs.Add(arg);
 
-                    AppDomain appDomain = AppDomain.CreateDomain("ExecutionDomain", null, setup);
+                    args = tempArgs.ToArray();
+                }
+
+                try
+                {
+                    SetEnvironmentVariable("CSScriptRuntime", System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString());
+                    SetEnvironmentVariable("CSScriptRuntimeLocation", System.Reflection.Assembly.GetExecutingAssembly().Location);
+                }
+                catch { } //SetEnvironmentVariable will always throw an exception on Mono
+
+                CSExecutor exec = new CSExecutor();
+
+                if (AppDomain.CurrentDomain.FriendlyName != "ExecutionDomain") // AppDomain.IsDefaultAppDomain is more appropriate but it is not available in .NET 1.1
+                {
+                    string configFile = exec.GetCustomAppConfig(args);
+                    if (configFile != "")
+                    {
+                        AppDomainSetup setup = AppDomain.CurrentDomain.SetupInformation;
+                        setup.ConfigurationFile = configFile;
+
+                        AppDomain appDomain = AppDomain.CreateDomain("ExecutionDomain", null, setup);
 #if !net4
                     appDomain.ExecuteAssembly(Assembly.GetExecutingAssembly().Location, null, args);
 #else
-                    appDomain.ExecuteAssembly(Assembly.GetExecutingAssembly().Location, args);
+                        appDomain.ExecuteAssembly(Assembly.GetExecutingAssembly().Location, args);
 #endif
-                    return;
+                        return;
+                    }
                 }
-            }
 
-            try
-            {
-                AppInfo.appName = Path.GetFileName(Assembly.GetExecutingAssembly().Location);
-                exec.Execute(args, new PrintDelegate(Print), null);
-            }
-            catch (Surrogate86ProcessRequiredException)
-            {
+                try
+                {
+                    AppInfo.appName = Path.GetFileName(Assembly.GetExecutingAssembly().Location);
+                    exec.Execute(args, new PrintDelegate(Print), null);
+                }
+                catch (Surrogate86ProcessRequiredException)
+                {
 #if !net4
             throw new ApplicationException("Cannot build surrogate host application because this script engine is build against early version of CLR.");
 #else
-                try
-                {
-                    string thisAssembly = Assembly.GetExecutingAssembly().Location;
-                    string runner = Path.Combine(Path.GetDirectoryName(thisAssembly), "lib\\runasm32.exe");
-
-                    if (!File.Exists(runner))
-                        runner = Path.Combine(Path.GetDirectoryName(thisAssembly), "runasm32.exe");
-
-                    if (!File.Exists(runner))
-                        runner = Environment.ExpandEnvironmentVariables("CSSCRIPT_32RUNNER");
-
-                    if (!File.Exists(runner))
+                    try
                     {
-                        Print("This script requires to be executed as x86 process but no runner (e.g. runasm32.exe) can be found.");
+                        string thisAssembly = Assembly.GetExecutingAssembly().Location;
+                        string runner = Path.Combine(Path.GetDirectoryName(thisAssembly), "lib\\runasm32.exe");
+
+                        if (!File.Exists(runner))
+                            runner = Path.Combine(Path.GetDirectoryName(thisAssembly), "runasm32.exe");
+
+                        if (!File.Exists(runner))
+                            runner = Environment.ExpandEnvironmentVariables("CSSCRIPT_32RUNNER");
+
+                        if (!File.Exists(runner))
+                        {
+                            Print("This script requires to be executed as x86 process but no runner (e.g. runasm32.exe) can be found.");
+                        }
+                        else
+                        {
+                            RunConsoleApp(runner, "\"" + thisAssembly + "\" " + GetCommandLineArgumentsStringFromEnvironment());
+                        }
                     }
-                    else
-                    {
-                        RunConsoleApp(runner, "\"" + thisAssembly + "\" " + GetCommandLineArgumentsStringFromEnvironment());
-                    }
-                }
-                catch { } //This will always throw an exception on Mono
+                    catch { } //This will always throw an exception on Mono
 #endif
-            }
-            catch (SurrogateHostProcessRequiredException e)
-            {
+                }
+                catch (SurrogateHostProcessRequiredException e)
+                {
 #if !net4
                 object dummy = e;
                 throw new ApplicationException("Cannot build surrogate host application because this script engine is build against early version of CLR.");
 #else
 
-                try
-                {
-                    string assemblyHost = ScriptLauncherBuilder.GetLauncherName(e.ScriptAssembly);
-                    string appArgs = CSSUtils.cmdFlagPrefix + "css_host_parent:" + Process.GetCurrentProcess().Id + " \"" + CSSUtils.cmdFlagPrefix + "css_host_asm:" + e.ScriptAssembly + "\" " + GenerateCommandLineArgumentsString(e.ScriptArgs);
-                    if (e.StartDebugger)
-                        appArgs = CSSUtils.cmdFlagPrefix + "css_host_dbg:true " + appArgs;
+                    try
+                    {
+                        string assemblyHost = ScriptLauncherBuilder.GetLauncherName(e.ScriptAssembly);
+                        string appArgs = CSSUtils.cmdFlagPrefix + "css_host_parent:" + Process.GetCurrentProcess().Id + " \"" + CSSUtils.cmdFlagPrefix + "css_host_asm:" + e.ScriptAssembly + "\" " + GenerateCommandLineArgumentsString(e.ScriptArgs);
+                        if (e.StartDebugger)
+                            appArgs = CSSUtils.cmdFlagPrefix + "css_host_dbg:true " + appArgs;
 
-                    RunConsoleApp(assemblyHost, appArgs);
-                }
-                catch (Exception e1)
-                {
-                    Console.WriteLine("Cannot execute Surrogate Host Process: " + e1);
-                }
+                        RunConsoleApp(assemblyHost, appArgs);
+                    }
+                    catch (Exception e1)
+                    {
+                        Console.WriteLine("Cannot execute Surrogate Host Process: " + e1);
+                    }
 #endif
+                }
+            }
+            finally
+            {
+                Console.OutputEncoding = originalEncoding;
             }
         }
 
@@ -212,6 +220,7 @@ namespace csscript
 
         static void SetInitialConsoleEncoding()
         {
+            //consider: https://social.msdn.microsoft.com/Forums/vstudio/en-US/e448b241-e250-4dcb-8ecd-361e00920dde/consoleoutputencoding-breaks-batch-files?forum=netfxbcl
             string consoleEncoding = Utils.GetConsoleEncodingOverwrite();
             if (consoleEncoding == null)
                 Console.OutputEncoding = System.Text.Encoding.UTF8;
