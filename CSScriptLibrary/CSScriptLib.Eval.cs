@@ -433,6 +433,16 @@ namespace CSScriptLibrary
             }
         }
 
+        /// <summary>
+        /// Gets the referenced assemblies. The set of assemblies is get cleared 
+        /// on Reset.
+        /// </summary>
+        /// <returns></returns>
+        public Assembly[] GetReferencedAssemblies()
+        {
+            return Assembly2Definition.Keys.ToArray();
+        }
+
         Dictionary<Assembly, IAssemblyDefinition> Assembly2Definition
         {
             get
@@ -820,7 +830,13 @@ namespace CSScriptLibrary
             finally
             {
                 if (CompilingResult.HasErrors && AutoResetEvaluatorOnError)
+                {
+                    //after reset evaluator will loose all references so need to restore them
+                    var refAsms = this.GetReferencedAssemblies();
                     SoftReset();
+                    foreach (var asm in refAsms)
+                        ReferenceAssembly(asm);
+                }
             }
         }
 
