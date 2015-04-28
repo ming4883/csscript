@@ -28,8 +28,8 @@ using System.Runtime.InteropServices;
 //      Build Number
 //      Revision
 //
-[assembly: AssemblyVersion("3.9.8.1")]
-[assembly: AssemblyFileVersion("3.9.8.1")]
+[assembly: AssemblyVersion("3.9.8.2")]
+[assembly: AssemblyFileVersion("3.9.8.2")]
 
 //
 // In order to sign your assembly you must specify a key to use. Refer to the

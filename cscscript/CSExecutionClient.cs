@@ -222,12 +222,13 @@ namespace csscript
         {
             //consider: https://social.msdn.microsoft.com/Forums/vstudio/en-US/e448b241-e250-4dcb-8ecd-361e00920dde/consoleoutputencoding-breaks-batch-files?forum=netfxbcl
             string consoleEncoding = Utils.GetConsoleEncodingOverwrite();
-            if (consoleEncoding == null)
-                Console.OutputEncoding = System.Text.Encoding.UTF8;
-            else if (!consoleEncoding.Equals("default", StringComparison.OrdinalIgnoreCase))
+            
+            if (consoleEncoding != null && !consoleEncoding.Equals("default", StringComparison.OrdinalIgnoreCase))
                 try { Console.OutputEncoding = System.Text.Encoding.GetEncoding(consoleEncoding); }
                 catch { }
+            
         }
+
 #if net4
         static void RunConsoleApp(string app, string args)
         {
