@@ -318,7 +318,7 @@ namespace csscript
         {
             try
             {
-                var oldEncoding = Console.OutputEncoding;
+                Encoding oldEncoding = Console.OutputEncoding;
 
                 Console.OutputEncoding = System.Text.Encoding.GetEncoding(encoding);
 
