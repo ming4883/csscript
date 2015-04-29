@@ -443,12 +443,14 @@ namespace CSScriptLibrary
             return Assembly2Definition.Keys.ToArray();
         }
 
+        static FieldInfo _FieldInfo;
         Dictionary<Assembly, IAssemblyDefinition> Assembly2Definition
         {
             get
             {
-                FieldInfo info = Importer.GetType().GetField("assembly_2_definition", BindingFlags.Instance | BindingFlags.NonPublic);
-                return (Dictionary<Assembly, IAssemblyDefinition>)info.GetValue(Importer);
+                if (_FieldInfo == null)
+                    _FieldInfo = Importer.GetType().GetField("assembly_2_definition", BindingFlags.Instance | BindingFlags.NonPublic);
+                return (Dictionary<Assembly, IAssemblyDefinition>)_FieldInfo.GetValue(Importer);
             }
         }
 
