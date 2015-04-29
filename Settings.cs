@@ -192,7 +192,7 @@ namespace csscript
         }
 
 
-        string consoleEncoding = "default";
+        string consoleEncoding = DefaultEncodingName;
         /// <summary>
         /// Encoding of he Console Output. Applicable for console applications script engine only.
         /// </summary>
@@ -206,17 +206,12 @@ namespace csscript
                 //consider: https://social.msdn.microsoft.com/Forums/vstudio/en-US/e448b241-e250-4dcb-8ecd-361e00920dde/consoleoutputencoding-breaks-batch-files?forum=netfxbcl 
                 if (consoleEncoding != value)
                 {
-                    consoleEncoding = value;
-
-                    string overwtiteValue = Utils.GetConsoleEncodingOverwrite();
-                    if (overwtiteValue != null)
-                        consoleEncoding = overwtiteValue;
-
-                    try { Console.OutputEncoding = System.Text.Encoding.GetEncoding(consoleEncoding); }
-                    catch { }
+                    consoleEncoding = Utils.ProcessNewEncoding(value);
                 }
             }
         }
+
+        internal const string DefaultEncodingName = "default";
 
         /// <summary>
         /// Specifies the .NET Framework version that the script is compiled against. This option can have the following values:

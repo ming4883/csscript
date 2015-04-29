@@ -60,11 +60,9 @@ namespace csscript
         /// </summary>
         static void Main(string[] rawArgs)
         {
-            Encoding originalEncoding = Console.OutputEncoding;
+            HostConsole.OnStart();
             try
             {
-                //Debug.Assert(false);
-                SetInitialConsoleEncoding();
 
                 //work around of nasty Win7x64 problem.
                 //http://superuser.com/questions/527728/cannot-resolve-windir-cannot-modify-path-or-path-being-reset-on-boot
@@ -114,7 +112,7 @@ namespace csscript
 
                         AppDomain appDomain = AppDomain.CreateDomain("ExecutionDomain", null, setup);
 #if !net4
-                    appDomain.ExecuteAssembly(Assembly.GetExecutingAssembly().Location, null, args);
+                        appDomain.ExecuteAssembly(Assembly.GetExecutingAssembly().Location, null, args);
 #else
                         appDomain.ExecuteAssembly(Assembly.GetExecutingAssembly().Location, args);
 #endif
@@ -130,7 +128,7 @@ namespace csscript
                 catch (Surrogate86ProcessRequiredException)
                 {
 #if !net4
-            throw new ApplicationException("Cannot build surrogate host application because this script engine is build against early version of CLR.");
+                    throw new ApplicationException("Cannot build surrogate host application because this script engine is build against early version of CLR.");
 #else
                     try
                     {
@@ -158,8 +156,8 @@ namespace csscript
                 catch (SurrogateHostProcessRequiredException e)
                 {
 #if !net4
-                object dummy = e;
-                throw new ApplicationException("Cannot build surrogate host application because this script engine is build against early version of CLR.");
+                    object dummy = e;
+                    throw new ApplicationException("Cannot build surrogate host application because this script engine is build against early version of CLR.");
 #else
 
                     try
@@ -180,7 +178,7 @@ namespace csscript
             }
             finally
             {
-                Console.OutputEncoding = originalEncoding;
+                HostConsole.OnExit();
             }
         }
 
@@ -218,16 +216,7 @@ namespace csscript
             return sb.ToString();
         }
 
-        static void SetInitialConsoleEncoding()
-        {
-            //consider: https://social.msdn.microsoft.com/Forums/vstudio/en-US/e448b241-e250-4dcb-8ecd-361e00920dde/consoleoutputencoding-breaks-batch-files?forum=netfxbcl
-            string consoleEncoding = Utils.GetConsoleEncodingOverwrite();
-            
-            if (consoleEncoding != null && !consoleEncoding.Equals("default", StringComparison.OrdinalIgnoreCase))
-                try { Console.OutputEncoding = System.Text.Encoding.GetEncoding(consoleEncoding); }
-                catch { }
-            
-        }
+
 
 #if net4
         static void RunConsoleApp(string app, string args)
@@ -313,5 +302,62 @@ namespace csscript
         //public static string appParams = "[/nl]:";
         //#pragma warning restore 414
         public static string appParamsHelp = "nl   - No logo mode: No banner will be shown/printed at execution time.\n";
+    }
+
+    class HostConsole
+    {
+        static Encoding originalEncoding;
+
+        public static void OnExit()
+        {
+            if (originalEncoding != null)
+                Console.OutputEncoding = originalEncoding;
+        }
+
+        public static void SetEncoding(string encoding)
+        {
+            try
+            {
+                var oldEncoding = Console.OutputEncoding;
+
+                Console.OutputEncoding = System.Text.Encoding.GetEncoding(encoding);
+
+                Utils.IsDeraultConsoleEncoding = false;
+
+                if (originalEncoding == null)
+                    originalEncoding = oldEncoding;
+            }
+            catch { }
+        }
+
+        public static void OnStart()
+        {
+            Utils.ProcessNewEncoding = ProcessNewEncoding;
+
+            ProcessNewEncoding(null);
+        }
+
+        public static string ProcessNewEncoding(string requestedEncoding)
+        {
+            string consoleEncodingOverwrite = NormaliseEncodingName(Environment.GetEnvironmentVariable("CSSCRIPT_CONSOLE_ENCODING_OVERWRITE"));
+
+            string encodingToSet = consoleEncodingOverwrite ?? NormaliseEncodingName(requestedEncoding);
+
+            if (encodingToSet != null)
+            {
+                if (encodingToSet != Settings.DefaultEncodingName)
+                    SetEncoding(encodingToSet);
+            }
+            return encodingToSet;
+        }
+
+        public static string NormaliseEncodingName(string name)
+        {
+            if (string.Compare(name, Settings.DefaultEncodingName, true) == 0)
+                return Settings.DefaultEncodingName;
+            else
+                return name;
+        }
+
     }
 }

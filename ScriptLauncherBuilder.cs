@@ -115,17 +115,22 @@ namespace csscript
                     refAssemblies += Assembly.ReflectionOnlyLoadFrom(asm).FullName + ":" + asm + ";";
 
             compilerParams.ReferencedAssemblies.Clear(); //it is important to remove all asms as they can have absolute path to the wrong CLR asms branch
-            compilerParams.ReferencedAssemblies.Add("System.dll"); 
+            compilerParams.ReferencedAssemblies.Add("System.dll");
 
             foreach (var item in compilerParams.ReferencedAssemblies)
             {
                 Debug.WriteLine(item);
             }
 
+            string setEncodingSatement = "";
+
+            if (string.Compare(consoleEncoding, Settings.DefaultEncodingName, true) != 0)
+                setEncodingSatement = "try { Console.OutputEncoding = System.Text.Encoding.GetEncoding(\""+consoleEncoding+"\"); } catch {}";
+
             string code = launcherCode
                                 .Replace("${REF_ASSEMBLIES}", refAssemblies)
                                 .Replace("${APPARTMENT}", appartment)
-                                .Replace("${CONSOLE_ENCODING}", consoleEncoding)
+                                .Replace("${CONSOLE_ENCODING}", setEncodingSatement)
                                 .Replace("${ASM_MANE}", Path.GetFileName(scriptAssembly));
 
             CompilerResults retval;
@@ -165,7 +170,7 @@ class Script
     ${APPARTMENT}
     static public int Main(string[] args)
     {
-        try { Console.OutputEncoding = System.Text.Encoding.GetEncoding(""${CONSOLE_ENCODING}""); } catch {}
+        ${CONSOLE_ENCODING}
         try
         {
             AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(CurrentDomain_AssemblyResolve);

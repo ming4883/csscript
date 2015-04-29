@@ -208,9 +208,13 @@ namespace csscript
                                     string actualArgs = (noargs ? "" : "args");
 
                                     string entryPointDefinition = "static int Main(string[] args) { ";
+
+                                    if (string.Compare(consoleEncoding, Settings.DefaultEncodingName, true) != 0)
+                                        entryPointDefinition += "try { Console.OutputEncoding = System.Text.Encoding.GetEncoding(\"" + consoleEncoding + "\"); } catch {} ";
+
                                     if (noReturn)
                                     {
-                                        entryPointDefinition += "try { System.Console.OutputEncoding = System.Text.Encoding.GetEncoding(\"" + consoleEncoding + "\"); } catch { } new ScriptClass().main(" + actualArgs + "); return 0;";
+                                        entryPointDefinition += "new ScriptClass().main(" + actualArgs + "); return 0;";
                                     }
                                     else
                                     {

@@ -228,10 +228,11 @@ namespace csscript
                 catch { }
         }
 
-        public static string GetConsoleEncodingOverwrite()
-        {
-            return Environment.GetEnvironmentVariable("CSSCRIPT_CONSOLE_ENCODING_OVERWRITE");
-        }
+        public delegate string ProcessNewEncodingHandler(string requestedEncoding);
+        public static ProcessNewEncodingHandler ProcessNewEncoding = DefaultProcessNewEncoding;
+        public static bool IsDeraultConsoleEncoding = true;
+        static string DefaultProcessNewEncoding(string requestedEncoding) { return requestedEncoding; }
+
 
         /// <summary>
         /// Waits for file idle.
