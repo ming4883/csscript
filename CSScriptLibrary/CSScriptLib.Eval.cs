@@ -730,7 +730,7 @@ namespace CSScriptLibrary
             return (Type)service.Evaluate("typeof(" + type + ");");
         }
 
-        static int AsnCounter = 0;
+        static int AsmCounter = 0;
 
         /// <summary>
         /// Evaluates (compiles) C# code.
@@ -743,7 +743,7 @@ namespace CSScriptLibrary
 
             HandleCompilingErrors(() =>
             {
-                int id = AsnCounter++;
+                int id = AsmCounter++;
                 var method = service.Compile(scriptText + GetConnectionPointClassDeclaration(id));
                 result = GetCompiledAssembly(id);
                 //cannot rely on 'method' as it is null in CS-Script scenarios
@@ -798,6 +798,8 @@ namespace CSScriptLibrary
         {
             CompilingResult.Reset();
 
+            Assembly[] initialRefAsms = this.GetReferencedAssemblies();
+
             try
             {
                 try
@@ -831,10 +833,11 @@ namespace CSScriptLibrary
             {
                 if (CompilingResult.HasErrors && AutoResetEvaluatorOnError)
                 {
-                    //after reset evaluator will loose all references so need to restore them
-                    var refAsms = this.GetReferencedAssemblies();
+                    //After reset evaluator will loose all references so need to restore them.
+                    //Though all ref asms should be noted before the execution as otherwise Mono can add new refasms 
+                    //during the asm probing.
                     SoftReset();
-                    foreach (var asm in refAsms)
+                    foreach (var asm in initialRefAsms)
                         ReferenceAssembly(asm);
                 }
             }
