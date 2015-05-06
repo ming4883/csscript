@@ -721,6 +721,35 @@ namespace CSScriptLibrary
         }
 
         /// <summary>
+        /// Compiles multiple C# files into a single assembly with CSExecutor
+        /// </summary>
+        /// <param name="sourceFiles">Collection of the files to be compiled.</param>
+        /// <param name="assemblyFile">The name of compiled assembly. If set to null a temporary file name will be used.</param>
+        /// <param name="debugBuild">'true' if debug information should be included in assembly; otherwise, 'false'.</param>
+        /// <param name="refAssemblies">The string array containing file names to the additional assemblies referenced by the script. </param>
+        /// <returns>Compiled assembly file name.</returns>
+        static public string CompileFiles(string[] sourceFiles, string assemblyFile, bool debugBuild, params string[] refAssemblies)
+        {
+            StringBuilder code = new StringBuilder();
+            
+            foreach (string item in sourceFiles)
+                code.AppendFormat("//css_inc {0};{1}", item, Environment.NewLine);
+            
+            return CompileCode(code.ToString(), assemblyFile, debugBuild, refAssemblies);
+        }
+
+        /// <summary>
+        /// Compiles multiple C# files into a single assembly with CSExecutor
+        /// </summary>
+        /// <param name="sourceFiles">Collection of the files to be compiled.</param>
+        /// <param name="refAssemblies">The string array containing file names to the additional assemblies referenced by the script. </param>
+        /// <returns>Compiled assembly file name.</returns>
+        static public string CompileFiles(string[] sourceFiles, params string[] refAssemblies)
+        {
+            return CompileFiles(sourceFiles, null, false, refAssemblies);
+        }
+
+        /// <summary>
         /// Compiles script file into assembly with CSExecutor
         /// </summary>
         /// <param name="scriptFile">The name of script file to be compiled.</param>
@@ -744,6 +773,8 @@ namespace CSScriptLibrary
         {
             return Compile(scriptFile, null, false, refAssemblies);
         }
+
+
 
         /// <summary>
         /// Compiles script file into assembly with CSExecutor. Uses specified config file to load script engine settings.
@@ -967,7 +998,7 @@ namespace CSScriptLibrary
         /// Surrounds the method implementation code into a class and compiles it code into assembly with CSExecutor and loads it in current AppDomain.
         /// The most convenient way of using dynamic methods is to declare them as static methods. In this case they can be invoked with wild card character as a class name (e.g. asmHelper.Invoke("*.SayHello")). Otherwise you will need to instantiate class "DyamicClass.Script" in order to call dynamic method.
         ///
-        /// You can have multiple methods implementations in the single methodCode. Also you can specify namespaces at the begining of the code:
+        /// You can have multiple methods implementations in the single methodCode. Also you can specify namespaces at the beginning of the code:
         ///
         /// CSScript.LoadMethod(
         ///     @"using System.Windows.Forms;
@@ -1363,6 +1394,34 @@ namespace CSScriptLibrary
         static public Assembly LoadCodeFrom(string scriptFile, params string[] refAssemblies)
         {
             return LoadCode(File.ReadAllText(scriptFile), refAssemblies);
+        }
+           
+        /// <summary>
+        /// Compiles code from the specified files into assembly with CSExecutor and loads it in current AppDomain.
+        /// <para>This method is a logical equivalent of the corresponding <c>LoadCode</c> method except the code is
+        /// not specified as a call argument but read from the file instead.</para>
+        /// </summary>
+        /// <param name="sourceFiles">The source files to be compiled.</param>
+        /// <param name="assemblyFile">The name of compiled assembly. If set to null a temporary file name will be used.</param>
+        /// <param name="debugBuild">'true' if debug information should be included in assembly; otherwise, 'false'.</param>
+        /// <param name="refAssemblies">The string array containing file names to the additional assemblies referenced by the script. </param>
+        /// <returns>Compiled assembly.</returns>
+        static public Assembly LoadFiles(string[] sourceFiles, string assemblyFile, bool debugBuild, params string[] refAssemblies)
+        {
+            return Assembly.LoadFrom(CompileFiles(sourceFiles, assemblyFile, debugBuild, refAssemblies));
+        }
+
+        /// <summary>
+        /// Compiles code from the specified files into assembly with CSExecutor and loads it in current AppDomain.
+        /// <para>This method is a logical equivalent of the corresponding <c>LoadCode</c> method except the code is
+        /// not specified as a call argument but read from the file instead.</para>
+        /// </summary>
+        /// <param name="sourceFiles">The source files to be compiled.</param>
+        /// <param name="refAssemblies">The string array containing file names to the additional assemblies referenced by the script. </param>
+        /// <returns>Compiled assembly.</returns>
+        static public Assembly LoadFiles(string[] sourceFiles, params string[] refAssemblies)
+        {
+            return Assembly.LoadFrom(CompileFiles(sourceFiles, refAssemblies));
         }
 
         /// <summary>
