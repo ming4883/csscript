@@ -625,7 +625,11 @@ namespace csscript
                     }
                     else if (args[i].StartsWith(cmdFlagPrefix + "co:")) // -co
                     {
-                        options.compilerOptions = args[i].Substring((cmdFlagPrefix + "co:").Length);
+                        //this one is accumulative
+                        string cOption = args[i].Substring((cmdFlagPrefix + "co:").Length);
+
+                        if(!options.compilerOptions.Contains(cOption))
+                            options.compilerOptions += " " + cOption;
                     }
                     else if (args[i].StartsWith(cmdFlagPrefix + "cd")) // -cd
                     {
@@ -1838,7 +1842,7 @@ namespace csscript
                         {
                             nugetArgs = package.Substring(0, nameStart).Replace("-ng:", "").Trim();
                             if (nugetArgs.StartsWith("\"") && nugetArgs.EndsWith("\""))
-                                nugetArgs = nugetArgs.Substring(1, nugetArgs.Length-2);
+                                nugetArgs = nugetArgs.Substring(1, nugetArgs.Length - 2);
                         }
                         package = package.Substring(nameStart).Trim();
                     }

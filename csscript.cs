@@ -199,6 +199,9 @@ namespace csscript
 #else
                     List<string> appArgs = new List<string>();
 #endif
+                    //The following will also update corresponding "options" members from "settings" data
+                    Settings settings = GetPersistedSettings(appArgs);
+
                     int firstScriptArg = CSSUtils.ParseAppArgs(args, this);
 
                     if (!options.processFile)
@@ -210,10 +213,6 @@ namespace csscript
                         print("No script file was specified.");
                         return; //no script, no script arguments
                     }
-
-                    //The following will also update corresponding "options" members from "settings" data
-                    Settings settings = GetPersistedSettings(appArgs);
-
 
 
                     //process original command-line arguments
