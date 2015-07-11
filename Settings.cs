@@ -491,7 +491,7 @@ namespace csscript
         /// </summary>
         /// <param name="fileName">File name of the XML file</param>
         /// <param name="createAlways">Create and return default settings object if it cannot be loaded from the file.</param>
-        /// <returns>Setting object desterilized from the XML file</returns>
+        /// <returns>Setting object deserialized from the XML file</returns>
         public static Settings Load(string fileName, bool createAlways)
         {
             Settings settings = new Settings();

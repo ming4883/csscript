@@ -1296,8 +1296,16 @@ namespace csscript
                     if (asmName == "")
                         continue;
 
-                    foreach (string asm in AssemblyResolver.FindAssembly(asmName, options.searchDirs))
-                        requestedRefAsms.AddAssembly(NormalizeGacAssemblyPath(asm));
+                    string[] files = AssemblyResolver.FindAssembly(asmName, options.searchDirs);
+                    if (files.Length > 0)
+                    {
+                        foreach (string asm in files)
+                            requestedRefAsms.AddAssembly(NormalizeGacAssemblyPath(asm));
+                    }
+                    else
+                    {
+                        requestedRefAsms.AddAssembly(asmName);
+                    }
                 }
             }
 
