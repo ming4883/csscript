@@ -107,7 +107,7 @@ ECHO ------------ >> ..\Build\build.log
 
 ECHO Building CSScriptLibrary.v4.0.dll: 
 ECHO Building CSScriptLibrary.v4.0.dll: >> ..\Build\build.log
-"%net4_tools%\msbuild.exe" ..\CSScriptLibrary\CSScriptLibrary.v4.0.csproj /t:Rebuild /p:configuration=Release /verbosity:quiet
+"%net4_tools%\msbuild.exe" ..\CSScriptLibrary\CSScriptLibrary.v4.0.sln /t:Rebuild /p:configuration=Release /p:platform="Any CPU" /verbosity:quiet
 ECHO ------------ >> ..\Build\build.log
 
 ECHO Building CSScriptLibrary.dll (unsigned): 
@@ -148,7 +148,7 @@ copy CSScriptLibrary.v1.1.xml "%local_dev%\Lib\Bin\NET 1.1\CSScriptLibrary.v1.1.
 copy CSScriptLibrary.v1.1.dll "%local_dev%\Lib\Bin\NET 1.1\CSScriptLibrary.v1.1.dll"
 copy cscs.v3.5.exe "%local_dev%\Lib\Bin\NET 3.5\cscs.exe"
 copy csws.v3.5.exe "%local_dev%\Lib\Bin\NET 3.5\csws.exe"
-copy cscs.exe "%local_dev%\Lib\Bin\Linux\cscs"
+copy cscs.exe "%CS-S_DEV_ROOT%\Lib\Bin\Linux\cscs.exe"
 copy CSScriptLibrary.v3.5.xml "%local_dev%\Lib\Bin\NET 3.5\CSScriptLibrary.v3.5.xml"
 copy CSScriptLibrary.v3.5.dll "%local_dev%\Lib\Bin\NET 3.5\CSScriptLibrary.v3.5.dll"
 copy CSScriptLibrary.v3.5.dll "%local_dev%\Samples\Hosting\CodeDOM\Older versions of CLR\CSScriptLibrary.v3.5.dll"

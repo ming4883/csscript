@@ -1,5 +1,6 @@
 //css_dbg /t:winexe;
 //css_dir ..\
+//css_dir %CS-S_DEV_ROOT%\lib
 //css_pre images($this)
 //css_res images.resources;	
 //css_import debugVS8.0.cs;
