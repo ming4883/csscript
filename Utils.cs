@@ -628,7 +628,7 @@ namespace csscript
                         //this one is accumulative
                         string cOption = args[i].Substring((cmdFlagPrefix + "co:").Length);
 
-                        if(!options.compilerOptions.Contains(cOption))
+                        if (!options.compilerOptions.Contains(cOption))
                             options.compilerOptions += " " + cOption;
                     }
                     else if (args[i].StartsWith(cmdFlagPrefix + "cd")) // -cd
@@ -1908,41 +1908,20 @@ namespace csscript
             if (libVersions.Length != 0)
             {
                 if (Utils.IsNet45Plus())
-                {
-                    compatibleVersion = Path.Combine(lib, "net45");
-                    if (!Directory.Exists(compatibleVersion))
-                        compatibleVersion = null;
-                }
+                    compatibleVersion = libVersions.FirstOrDefault(x => Path.GetFileName(x).StartsWith("net45", StringComparison.OrdinalIgnoreCase));
 
                 if (compatibleVersion == null && Utils.IsNet40Plus())
+                    compatibleVersion = libVersions.FirstOrDefault(x => Path.GetFileName(x).StartsWith("net40", StringComparison.OrdinalIgnoreCase));
+
+                if (compatibleVersion == null && Utils.IsNet20Plus())
                 {
-                    compatibleVersion = Path.Combine(lib, "net40");
-                    if (!Directory.Exists(compatibleVersion))
-                        compatibleVersion = null;
-                }
-
-                if (Utils.IsNet20Plus())
-                {
-                    if (compatibleVersion == null)
-                    {
-                        compatibleVersion = Path.Combine(lib, "net35");
-                        if (!Directory.Exists(compatibleVersion))
-                            compatibleVersion = null;
-                    }
+                    compatibleVersion = libVersions.FirstOrDefault(x => Path.GetFileName(x).StartsWith("net35", StringComparison.OrdinalIgnoreCase));
 
                     if (compatibleVersion == null)
-                    {
-                        compatibleVersion = Path.Combine(lib, "net30");
-                        if (!Directory.Exists(compatibleVersion))
-                            compatibleVersion = null;
-                    }
+                        compatibleVersion = libVersions.FirstOrDefault(x => Path.GetFileName(x).StartsWith("net30", StringComparison.OrdinalIgnoreCase));
 
                     if (compatibleVersion == null)
-                    {
-                        compatibleVersion = Path.Combine(lib, "net20");
-                        if (!Directory.Exists(compatibleVersion))
-                            compatibleVersion = null;
-                    }
+                        compatibleVersion = libVersions.FirstOrDefault(x => Path.GetFileName(x).StartsWith("net20", StringComparison.OrdinalIgnoreCase));
                 }
 
                 if (compatibleVersion != null)
