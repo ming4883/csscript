@@ -254,11 +254,26 @@ namespace csscript
         [Category("Extensibility"), Description("List of assembly names to be automatically referenced by the scripts (e.g. System.dll, System.Core.dll). Assembly extension is optional.")]
         public string DefaultRefAssemblies
         {
-            get { return defaultRefAssemblies; }
+            get
+            {
+                if (defaultRefAssemblies == null)
+                    defaultRefAssemblies = InitDefaultRefAssemblies();
+
+                return defaultRefAssemblies;
+            }
             set { defaultRefAssemblies = value; }
         }
 
-        string defaultRefAssemblies = "System.Core; System.Linq;";
+        string defaultRefAssemblies;
+
+
+        string InitDefaultRefAssemblies()
+        {
+            if (Utils.IsLinux())
+                return "System.Core;";
+            else
+                return "System.Core; System.Linq;";
+        }
 
         /// <summary>
         /// Returns value of the DefaultRefAssemblies (with expanding environment variables).
