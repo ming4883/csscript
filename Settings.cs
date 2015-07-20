@@ -269,10 +269,14 @@ namespace csscript
 
         string InitDefaultRefAssemblies()
         {
+#if net4
             if (Utils.IsLinux())
                 return "System.Core;";
             else
                 return "System.Core; System.Linq;";
+#else
+            return "";
+#endif
         }
 
         /// <summary>
