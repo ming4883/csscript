@@ -468,17 +468,30 @@ namespace csscript
 
                     options.compilationContext = CSSUtils.GenerateCompilationContext(parser, options);
 
-                    //Run main script
-                    //We need to start the execution in a new thread as it is the only way
-                    //to set desired ApartmentState under .NET 2.0
-                    Thread newThread = new Thread(new ThreadStart(this.ExecuteImpl));
 #if net1
-                    newThread.ApartmentState = options.apartmentState;
+                    ApartmentState currentApartmentState = Thread.CurrentThread.ApartmentState;
 #else
-                    newThread.SetApartmentState(options.apartmentState);
+                    ApartmentState currentApartmentState = Thread.CurrentThread.GetApartmentState();
 #endif
-                    newThread.Start();
-                    newThread.Join();
+                    if (options.apartmentState != currentApartmentState)
+                    {
+                        //Run main script
+                        //We need to start the execution in a new thread as it is the only way
+                        //to set desired ApartmentState under .NET 2.0
+                        Thread newThread = new Thread(new ThreadStart(this.ExecuteImpl));
+#if net1
+                        newThread.ApartmentState = options.apartmentState;
+#else
+                        newThread.SetApartmentState(options.apartmentState);
+#endif
+                        newThread.Start();
+                        newThread.Join();
+                    }
+                    else
+                    {
+                        this.ExecuteImpl();
+                    }
+                    
                     if (lastException != null)
                         if (lastException is SurrogateHostProcessRequiredException)
                             throw lastException;
